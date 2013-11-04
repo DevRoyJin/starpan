@@ -11,7 +11,7 @@ using DiskAPIBase;
 
 namespace BaiduCloudSDK
 {
-    public class BaiduPCSDiskUtility : IDiskUtility
+    public class BaiduPCSDiskUtility : ICloudDiskAccessUtility
     {
         #region Constant
         private const string PcsPath = @"/apps/sjtupan";
@@ -90,7 +90,7 @@ namespace BaiduCloudSDK
 
 
 
-        public bool UploadFile(string path)
+        public bool UploadFile(string path,byte[] fileData)
         {
             if (!File.Exists(path))
             {
@@ -113,7 +113,7 @@ namespace BaiduCloudSDK
                 else
                 {
                     //一般文件上传
-                    json = UploadInternal(path);
+                    json = UploadInternal(path,fileData);
                 }
                 var jo = (JObject) JsonConvert.DeserializeObject(json);
                 if (jo == null)
@@ -232,7 +232,7 @@ namespace BaiduCloudSDK
             try
             {
                 var ret = DeleteDirectoryInternal(pcsPath);
-                Console.WriteLine("Delete directory {0} succeeds-->" + ret,pcsPath);
+                Console.WriteLine("Delete directory {0} succeeded-->" + ret,pcsPath);
                 return true;
             }
             catch (WebException we)
@@ -266,7 +266,7 @@ namespace BaiduCloudSDK
             try
             {
                 var ret = DeleteDirectoryInternal(pcsPath);
-                Console.WriteLine("Delete file {0} succeed-->" + ret,pcsPath);
+                Console.WriteLine("Delete file {0} succeeded-->" + ret,pcsPath);
                 return true;
             }
             catch (WebException we)
@@ -306,26 +306,29 @@ namespace BaiduCloudSDK
             return HttpWebResponseUtility.ConvertReponseToString(response);
         }
 
-        private string UploadInternal(string path)
+        private string UploadInternal(string path,byte[] fileData)
         {
-            string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
-            string pcsPath = PcsPath;
-            string[] pathComponents = path.Split(Path.DirectorySeparatorChar);
+            return null;
+            //需要重写
 
-            int i = 0;
-            foreach (var pathComponent in pathComponents)
-            {
-                if (i > 0)
-                    pcsPath += @"/" + pathComponent;
-                i++;
-            }
-            string url =
-                "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&path={1}&access_token={2}";
+            //string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
+            //string pcsPath = PcsPath;
+            //string[] pathComponents = path.Split(Path.DirectorySeparatorChar);
 
-            url = string.Format(url, BaiduCloudCommand.UploadCommand, Uri.EscapeDataString(pcsPath), AccessToken);
-            string contentType = "multipart/form-data; boundary=" + boundary + "\r\n";
-            var response = HttpWebResponseUtility.CreatePostHttpResponse(url, contentType, HttpWebResponseUtility.ConstructFileUploadPostData(path, pcsPath, boundary), HttpWebResponseUtility.DefaultRequestTimeout, null, Encoding.UTF8, null);
-            return HttpWebResponseUtility.ConvertReponseToString(response);
+            //int i = 0;
+            //foreach (var pathComponent in pathComponents)
+            //{
+            //    if (i > 0)
+            //        pcsPath += @"/" + pathComponent;
+            //    i++;
+            //}
+            //string url =
+            //    "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&path={1}&access_token={2}";
+
+            //url = string.Format(url, BaiduCloudCommand.UploadCommand, Uri.EscapeDataString(pcsPath), AccessToken);
+            //string contentType = "multipart/form-data; boundary=" + boundary + "\r\n";
+            //var response = HttpWebResponseUtility.CreatePostHttpResponse(url, contentType, HttpWebResponseUtility.ConstructFileUploadPostData(path, pcsPath, boundary), HttpWebResponseUtility.DefaultRequestTimeout, null, Encoding.UTF8, null);
+            //return HttpWebResponseUtility.ConvertReponseToString(response);
 
         }
 

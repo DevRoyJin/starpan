@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using DiskAPIBase;
@@ -7,14 +8,14 @@ using Aliyun.OpenServices.OpenStorageService;
 
 namespace AliyunSDK
 {
-    public class AliyunOssUtility : IDiskUtility
+    public class AliyunOssUtility : ICloudDiskAccessUtility
     {
         private const string EndPoint = "http://oss.aliyuncs.com";
         private const string AccessKey = "Y8HLBRjlRgKp5SXV";
         private const string AccessSecret = "6nRLip0xiul2CZVsTDe36TYoqD09YT";
         private const string BucketName = "localclouddisk";
 
-        private OssClient _ossClient;
+        private readonly OssClient _ossClient;
 
         private AliyunOssUtility()
         {
@@ -54,9 +55,25 @@ namespace AliyunSDK
             return Int64.MaxValue;
         }
 
-        public bool UploadFile(string path)
+        public bool UploadFile(string path,byte[] fileData)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var metaData = new ObjectMetadata();
+                metaData.ContentEncoding = "utf-8";
+                _ossClient.PutObject(BucketName, path, new MemoryStream(fileData), metaData);
+                return true;
+            }
+            catch (OssException ossEx)
+            {
+                Console.WriteLine("OSS operation failed: {0}", ossEx.Message);
+
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("Generic error: {0}", exception.Message);
+            }
+            return false;
         }
 
         public bool DownloadFile(string pcsPath, out byte[] filebuffer)
@@ -64,9 +81,25 @@ namespace AliyunSDK
             throw new NotImplementedException();
         }
 
-        public bool CreateDirectory(string pcsPath)
+        public bool CreateDirectory(string path)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _ossClient.PutObject(BucketName, path, null, null);
+                return true;
+            }
+            catch (OssException ossEx)
+            {
+                Console.WriteLine("OSS operation failed: {0}", ossEx.Message);
+                
+            }
+            catch (Exception exception)
+            {          
+                Console.WriteLine("Generic error: {0}",exception.Message);
+            }
+            return false;
+
+
         }
 
         public bool DeleteDirectory(string pcsPath)

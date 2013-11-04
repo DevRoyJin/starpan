@@ -43,7 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HttpWebResponseUtility.cs" />
-    <Compile Include="IDiskUtility.cs" />
+    <Compile Include="ICloudDiskAccessUtility.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

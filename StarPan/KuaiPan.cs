@@ -141,7 +141,6 @@ namespace StarPan
             var result = sdk.UpLoadFile(path, true, GetFileName(path), buffer);
             if (result != null)
             {
-
                 return true;
             }
             return false; ;

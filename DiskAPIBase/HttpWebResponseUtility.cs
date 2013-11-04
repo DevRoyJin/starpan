@@ -224,9 +224,10 @@ namespace DiskAPIBase
             return null;
         }
 
+        #region [Obsoleted]
         public static string ConstructFileUploadPostData(string filePath,string appPath,string boundary)
         {       
-            StringBuilder postDataBuilder = new StringBuilder();
+            var postDataBuilder = new StringBuilder();
             boundary = "--" + boundary;
             //构造上传文件post数据
             if (!string.IsNullOrEmpty(filePath))
@@ -285,37 +286,66 @@ namespace DiskAPIBase
                     //--endline
                     postDataBuilder.Append(boundary);
                     postDataBuilder.Append("--\r\n");
-
-                    //postDataBuilder.Append(boundary);
-                    //postDataBuilder.Append("\r\n");
-                    //postDataBuilder.Append("Content-Disposition: form-data; name=\"file\"\r\n");
-                    ////postDataBuilder.Append(@"Content-Type: application/octet-stream");
-                    //postDataBuilder.Append("\r\n\r\n");
-                    //byte[] b = null;
-                    //using (var fs = new FileStream(filePath, FileMode.Open))
-                    //{
-                    //    using (var ms = new MemoryStream())
-                    //    {
-                    //        int count = 0;
-                    //        do
-                    //        {
-                    //            var buf = new byte[1024];
-                    //            count = fs.Read(buf, 0, 1024);
-                    //            ms.Write(buf, 0, count);
-                    //        } while (fs.CanRead && count > 0);
-                    //        b = ms.ToArray();
-                    //    }
-                    //}
-                    //postDataBuilder.Append(Encoding.UTF8.GetString(b));
-                    //postDataBuilder.Append("\r\n");
-                    //postDataBuilder.Append(boundary);
-                    //postDataBuilder.Append("--\r\n");
-
-
                 }
                 return postDataBuilder.ToString();
             }
             return null;
+        }
+        #endregion
+
+        public static string ConstructFileUploadPostData(string fileName, byte[] fileData, string appPath,
+            string boundary)
+        {
+            if (fileData == null || fileData.Length == 0)
+            {
+                throw new InvalidOperationException("File Data is null.");
+            }
+            if (string.IsNullOrEmpty(fileName))
+            {
+                throw new InvalidOperationException("File name is null or empty.");
+            }
+            //组装上传文件post数据
+            var postDataBuilder = new StringBuilder();
+            //FileName
+            postDataBuilder.Append(boundary);
+            postDataBuilder.Append("\r\n");
+            postDataBuilder.Append("Content-Disposition: form-data; name=\"Filename\"\r\n");
+            postDataBuilder.Append("\r\n\r\n");
+            postDataBuilder.Append(fileName);
+            postDataBuilder.Append("\r\n");
+
+            //path
+            postDataBuilder.Append(boundary);
+            postDataBuilder.Append("\r\n");
+            postDataBuilder.Append("Content-Disposition: form-data; name=\"path\"\r\n");
+            postDataBuilder.Append("\r\n\r\n");
+            postDataBuilder.Append(appPath);
+            postDataBuilder.Append("\r\n");
+
+            //filedata
+            postDataBuilder.Append(boundary);
+            postDataBuilder.Append("\r\n");
+            postDataBuilder.Append(
+                string.Format("Content-Disposition: form-data; name=\"Filedata\"; filename=\"{0}\"\r\n",
+                              fileName));
+            postDataBuilder.Append("Content-Type: application/octet-stream");
+            postDataBuilder.Append("\r\n\r\n");
+            postDataBuilder.Append(Encoding.UTF8.GetString(fileData));
+            postDataBuilder.Append("\r\n");
+
+            //upload
+            postDataBuilder.Append(boundary);
+            postDataBuilder.Append("\r\n");
+            postDataBuilder.Append("Content-Disposition: form-data; name=\"Upload\"\r\n");
+            postDataBuilder.Append("\r\n");
+            postDataBuilder.Append("Submit Query\r\n");
+
+            //--endline
+            postDataBuilder.Append(boundary);
+            postDataBuilder.Append("--\r\n");
+
+            return postDataBuilder.ToString();
+
         }
 
         private static bool CheckValidationResult(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors)
