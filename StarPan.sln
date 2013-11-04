@@ -13,9 +13,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DokanNet", "DokanNet\DokanN
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiskAPIBase", "DiskAPIBase\DiskAPIBase.csproj", "{EACDFD73-4538-4F15-B2EC-61BC21D02A2C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BaiduCloudSDK", "BaiduCloudAPI\BaiduCloudSDK.csproj", "{7449726A-9631-4514-AB6E-FE1EE9558890}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AliyunSDK", "AliyunSDK\AliyunSDK.csproj", "{BA7FCDD0-D791-4CBC-A3B1-023A9EC57B1C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BaiduCloudSDK", "BaiduCloudSDK\BaiduCloudSDK.csproj", "{7449726A-9631-4514-AB6E-FE1EE9558890}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,16 +69,6 @@ Global
 		{EACDFD73-4538-4F15-B2EC-61BC21D02A2C}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{EACDFD73-4538-4F15-B2EC-61BC21D02A2C}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{EACDFD73-4538-4F15-B2EC-61BC21D02A2C}.Release|x86.ActiveCfg = Release|Any CPU
-		{7449726A-9631-4514-AB6E-FE1EE9558890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7449726A-9631-4514-AB6E-FE1EE9558890}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7449726A-9631-4514-AB6E-FE1EE9558890}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{7449726A-9631-4514-AB6E-FE1EE9558890}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{7449726A-9631-4514-AB6E-FE1EE9558890}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{7449726A-9631-4514-AB6E-FE1EE9558890}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7449726A-9631-4514-AB6E-FE1EE9558890}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7449726A-9631-4514-AB6E-FE1EE9558890}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{7449726A-9631-4514-AB6E-FE1EE9558890}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{7449726A-9631-4514-AB6E-FE1EE9558890}.Release|x86.ActiveCfg = Release|Any CPU
 		{BA7FCDD0-D791-4CBC-A3B1-023A9EC57B1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BA7FCDD0-D791-4CBC-A3B1-023A9EC57B1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BA7FCDD0-D791-4CBC-A3B1-023A9EC57B1C}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -89,6 +79,16 @@ Global
 		{BA7FCDD0-D791-4CBC-A3B1-023A9EC57B1C}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{BA7FCDD0-D791-4CBC-A3B1-023A9EC57B1C}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{BA7FCDD0-D791-4CBC-A3B1-023A9EC57B1C}.Release|x86.ActiveCfg = Release|Any CPU
+		{7449726A-9631-4514-AB6E-FE1EE9558890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7449726A-9631-4514-AB6E-FE1EE9558890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7449726A-9631-4514-AB6E-FE1EE9558890}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{7449726A-9631-4514-AB6E-FE1EE9558890}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{7449726A-9631-4514-AB6E-FE1EE9558890}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7449726A-9631-4514-AB6E-FE1EE9558890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7449726A-9631-4514-AB6E-FE1EE9558890}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7449726A-9631-4514-AB6E-FE1EE9558890}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{7449726A-9631-4514-AB6E-FE1EE9558890}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{7449726A-9631-4514-AB6E-FE1EE9558890}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

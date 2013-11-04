@@ -50,7 +50,7 @@
     <Compile Include="StarPanOperations.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BaiduCloudAPI\BaiduCloudSDK.csproj">
+    <ProjectReference Include="..\BaiduCloudSDK\BaiduCloudSDK.csproj">
       <Project>{7449726A-9631-4514-AB6E-FE1EE9558890}</Project>
       <Name>BaiduCloudSDK</Name>
     </ProjectReference>
