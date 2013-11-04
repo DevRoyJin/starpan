@@ -27,6 +27,8 @@ namespace StarPan
         private KuaiPan KuaiPan;
         private BaiduPan BaiduPan;
         private BaiduPCSDiskUtility BaiduSdk;
+        private byte[] uploadTotalBuffer=null;
+        private FileElement ToUploadFile;
 
         public AllinOne()
         {
@@ -130,10 +132,10 @@ namespace StarPan
 
         public FileElement searchFile(string path) //按照文件名查找List中的文件
         {
-            string name = GetFileName(path);
+            
             foreach (FileElement file in AllFiles)
             {
-                if (file.name == name) return file;
+                if (file.parentPath+file.name == path) return file;
             }
             return null;
         }
@@ -208,9 +210,48 @@ namespace StarPan
             return result ? true : false;
         }
 
-        public bool uploadFile(string path, byte[] buffer) //upload file
+        public FileElement initialUploadFile(string path)
         {
             FileElement newfile = new FileElement();
+            newfile.name = GetFileName(path);
+            newfile.accessTime = DateTime.Now;
+            newfile.createTime = DateTime.Now;
+            newfile.motifyTime = DateTime.Now;
+            newfile.isdir = FileAttributes.Normal;
+            newfile.parentPath = GetPathPart(path);
+            newfile.size = 0;
+            AllFiles.Add(newfile);
+            return newfile;
+        }
+
+        public bool uploadFile(string path, byte[] buffer) //upload file
+        {
+            bool result = true;
+
+            //为了支持大于64KB的文件上传，这里先检察传入的buffer大小，如果为65536则说明文件结束，继续等待下次的buffer传入并累加
+            if (ToUploadFile == null) ToUploadFile = initialUploadFile(path);
+
+            if (buffer.Length == 65536)
+            {
+                if (uploadTotalBuffer == null) uploadTotalBuffer = buffer;
+                else
+                    uploadTotalBuffer = uploadTotalBuffer.Concat(buffer).ToArray();
+                AllFiles.Remove(ToUploadFile);
+                ToUploadFile.size = uploadTotalBuffer.Length;
+                AllFiles.Add(ToUploadFile);
+                return true;
+            }
+            else
+            {
+                if (uploadTotalBuffer == null) uploadTotalBuffer = buffer;
+                else
+                uploadTotalBuffer = uploadTotalBuffer.Concat(buffer).ToArray();
+                AllFiles.Remove(ToUploadFile);
+                ToUploadFile.size = uploadTotalBuffer.Length;
+                
+            }
+            
+            //当buffer size小于65536时，说明文件尾已到，则将合并后的buffer传递至api并上传至网盘
             if (GetPathPart(path) == "/")
             {
                 Random rd = new Random();
@@ -219,16 +260,16 @@ namespace StarPan
                 if (i == 0)
                 {
                     Console.WriteLine("New file create in Baidu");
-                    BaiduPan.UploadFile(path, buffer);
+                    result = BaiduPan.UploadFile(path, uploadTotalBuffer);
                 }
                 else if (i == 1)
                 {
                     Console.WriteLine("New file create in KuaiPan");
-                    KuaiPan.UploadFile(path, buffer);
+                    result = KuaiPan.UploadFile(path, uploadTotalBuffer);
                 }
                 else if (i == 2) { }
 
-                newfile.origin = i;
+                ToUploadFile.origin = i;
             }
             else
             {
@@ -240,32 +281,32 @@ namespace StarPan
                         {
 
                             Console.WriteLine("New file create in Baidu");
-                            BaiduPan.UploadFile(path, buffer);
+                            result = BaiduPan.UploadFile(path, uploadTotalBuffer);
                         }
                         else if (file.origin == 1)
                         {
                             Console.WriteLine("New file create in KuaiPan");
-                            KuaiPan.UploadFile(path, buffer);
+                            result = KuaiPan.UploadFile(path, uploadTotalBuffer);
                         }
                         else if (file.origin == 2) { }
 
-                        newfile.origin = file.origin;
+                        ToUploadFile.origin = file.origin;
                     }
                 }
             }
 
+            if (result == true)
+            {
 
-            newfile.name = GetFileName(path);
-            newfile.accessTime = DateTime.Now;
-            newfile.createTime = DateTime.Now;
-            newfile.motifyTime = DateTime.Now;
-            newfile.isdir = FileAttributes.Normal;
-            newfile.parentPath = GetPathPart(path);
-
-            newfile.size = buffer.Length;
-            AllFiles.Add(newfile);
-
-            return true;
+                AllFiles.Add(ToUploadFile);
+            }
+            else
+            {
+               
+            }
+            uploadTotalBuffer = null;
+            ToUploadFile = null;
+            return result;
         }
 
         public bool removeFile(string path)
@@ -301,6 +342,18 @@ namespace StarPan
         {
             bool result = true;
             FileElement newfile = new FileElement();
+            if (path == "/") return true;
+            else
+            {
+                foreach (FileElement file in AllFiles)
+                {
+                    if (file.parentPath + file.name == path) return true;
+                }
+            }
+            //经调式，当上传文件时，此方法也会被调用，所以必须使用以上代码判断文件的父目录，若存在则不用新建直接返回true
+
+
+
             if (GetPathPart(path) == "/")
             {
                 Random rd = new Random();
@@ -345,18 +398,59 @@ namespace StarPan
 
 
             }
-            newfile.name = GetFileName(path);
-            newfile.accessTime = DateTime.Now;
-            newfile.createTime = DateTime.Now;
-            newfile.motifyTime = DateTime.Now;
-            newfile.isdir = FileAttributes.Directory;
-            newfile.parentPath = GetPathPart(path);
-
-            newfile.size = 0;
-            AllFiles.Add(newfile);
-
+            if (result == true)
+            {
+                newfile.name = GetFileName(path);
+                newfile.accessTime = DateTime.Now;
+                newfile.createTime = DateTime.Now;
+                newfile.motifyTime = DateTime.Now;
+                newfile.isdir = FileAttributes.Directory;
+                newfile.parentPath = GetPathPart(path);
+                
+                newfile.size = 0;
+                AllFiles.Add(newfile);
+            }
             return result;
 
+        }
+
+        public bool MoveFile(string fromPath, string toPath)
+        {
+            bool result=true;
+            foreach (FileElement file in AllFiles) //find file info from List
+            {
+                if (file.parentPath + file.name == fromPath) //path could be found in List
+                {
+                    if (file.origin == 0) //from Baidu pan
+                    {
+                        result = BaiduPan.MoveFile(fromPath, toPath);
+                        
+                    }
+                    if (file.origin == 1) //from KuaiPan
+                    {
+                        result = KuaiPan.MoveFile(fromPath, toPath);
+
+                    }
+
+                    if (file.origin == 2)
+                    {
+
+                    }
+                    if (result)
+                    {
+                        file.name = GetFileName(toPath);
+                        file.parentPath = GetPathPart(toPath);
+                        file.motifyTime = DateTime.Now;
+                        
+                    }
+
+                }
+            }
+
+
+            return result;
+        
+        
         }
 
 
@@ -379,6 +473,8 @@ namespace StarPan
         bool DeleteDirectory(string path);
 
         bool DeleteFile(string path);
+
+        bool MoveFile(string fromPath, string toPath);
 
     }
 }

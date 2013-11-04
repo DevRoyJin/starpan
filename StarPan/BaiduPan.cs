@@ -166,8 +166,10 @@ namespace StarPan
             return deserializedList;
         }
         
-        public string ConstructFileUploadPostData(byte[] buffer, string filename, string appPath, string boundary)
+        public byte[] ConstructFileUploadPostData(byte[] buffer, string filename, string appPath, string boundary)
         {
+            byte[] totalData;
+
             StringBuilder postDataBuilder = new StringBuilder();
             boundary = "--" + boundary;
             //构造上传文件post数据
@@ -212,7 +214,12 @@ namespace StarPan
             //    }
             //}
 
-            postDataBuilder.Append(Encoding.UTF8.GetString(buffer));
+            byte[] bytesBeforeBuffer = Encoding.UTF8.GetBytes(postDataBuilder.ToString());
+
+            //postDataBuilder.Append(Encoding.UTF8.GetString(buffer));
+            totalData = bytesBeforeBuffer.Concat(buffer).ToArray();
+
+            postDataBuilder = new StringBuilder();
             postDataBuilder.Append("\r\n");
 
             //upload
@@ -226,9 +233,11 @@ namespace StarPan
             postDataBuilder.Append(boundary);
             postDataBuilder.Append("--\r\n");
 
+            byte[] bytesAfterBuffer = Encoding.UTF8.GetBytes(postDataBuilder.ToString());
 
+            totalData = totalData.Concat(bytesAfterBuffer).ToArray();
 
-            return postDataBuilder.ToString();
+            return totalData;
 
         }
 
@@ -334,9 +343,9 @@ namespace StarPan
                 string filename = StarPanOperations.GetFileName(path);
                 Uri uri = new Uri(string.Format(@"https://pcs.baidu.com/rest/2.0/pcs/file?method=upload&access_token={0}&path={1}&ondup=overwrite", access_token, appPath + path));
                 HttpWebRequest request = HttpWebRequest.Create(uri) as HttpWebRequest;
-                String postData = System.Text.Encoding.UTF8.GetString(buffer);
-                postData = ConstructFileUploadPostData(buffer, filename, appPath, boundary);
-                byte[] data = Encoding.UTF8.GetBytes(postData);
+                //String postData = System.Text.Encoding.UTF8.GetString(buffer);
+                byte[] data = ConstructFileUploadPostData(buffer, filename, appPath+GetPathPart(path), boundary);
+                
                 request.Method = "POST";
                 request.ContentType = "multipart/form-data; boundary=" + boundary + "\r\n";
                 request.Accept = @"*/*";
@@ -399,14 +408,14 @@ namespace StarPan
                         {
                             var offset = 0;
                             var count = 0;
-                            byte[] buff = new byte[1024];
+                            byte[] buff = new byte[32 * 1024];
                             do
                             {
                                 count = reader.Read(buff, offset, buff.Length);
                                 ms.Write(buff, offset, count);
 
                             } while (reader.CanRead && count > 0);
-                            filebuffer= ms.ToArray();
+                            readFileBuff = ms.ToArray();
                         }
                     }
 
@@ -417,6 +426,7 @@ namespace StarPan
                     //responseStream.Dispose();
 
                 }
+                filebuffer = readFileBuff;
                 return true;
             }
             catch (WebException e)
@@ -425,6 +435,57 @@ namespace StarPan
                 return false;
             }
             //return readFileBuff;
+        }
+
+
+        public bool MoveFile(string fromPath, string toPath)
+        {
+            try
+            {
+
+                Console.WriteLine("Move file: from " + fromPath + " to " + toPath);
+
+                Uri uri = new Uri(string.Format(@"https://pcs.baidu.com/rest/2.0/pcs/file?method=move&access_token={0}", access_token));
+                HttpWebRequest request = HttpWebRequest.Create(uri) as HttpWebRequest;
+                byte[] data = Encoding.UTF8.GetBytes("from=" + appPath + fromPath+"&to="+appPath+toPath);
+                request.ContentType = @"application/x-www-form-urlencoded; charset=UTF-8";
+                request.ContentLength = data.Length;
+                request.Method = "POST";
+                request.Accept = @"*/*";
+
+
+                request.UserAgent = @"User-Agent: Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.69 Safari/537.36";
+                request.ProtocolVersion = HttpVersion.Version10;
+
+                using (Stream postStream = request.GetRequestStream())
+                {
+                    postStream.Write(data, 0, data.Length);
+                    postStream.Close();
+                }
+
+                using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+                {
+
+                    // Get the response stream  
+                    StreamReader reader = new StreamReader(response.GetResponseStream());
+                    string result = reader.ReadToEnd();
+                    // Console application output  
+                    Console.WriteLine(result);
+                    if (result.Contains("error_msg")) return false;
+
+                }
+
+                return true;
+            }
+
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return false;
+            }
+
+            return true;
+
         }
 
         #endregion

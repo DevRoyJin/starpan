@@ -101,16 +101,18 @@ namespace StarPan
                         {
                             var offset = 0;
                             var count = 0;
-                            byte[] buff = new byte[1024];
+                            byte[] buff = new byte[32 * 1024];
                             do
                             {
                                 count = reader.Read(buff, offset, buff.Length);
                                 ms.Write(buff, offset, count);
 
                             } while (reader.CanRead && count > 0);
-                            filebuffer = ms.ToArray();
+                            readFileBuff = ms.ToArray();
                         }
                     }
+
+                    filebuffer = readFileBuff;
                     return true;
                     //readFileBuff = new Byte[response.ContentLength];
 
@@ -163,13 +165,17 @@ namespace StarPan
         }
 
 
+        public bool MoveFile(string fromPath, string toPath)
+        {
+            if(sdk.Move(fromPath, toPath)!=null)return true;
+            return false;
+        }
+
         #endregion
 
-        #region IDiskUtility Members
 
 
 
 
-        #endregion
     }
 }

@@ -14,7 +14,7 @@ namespace StarPan
         #region DokanOperations member
 
 
-
+        private int Context = 0;
         private int count_;
         private string rootPath = "/apps/sjtupan/";
         private KuaiPan KuaiPan;
@@ -44,7 +44,7 @@ namespace StarPan
 
         public int CreateDirectory(string filename, DokanFileInfo info)
         {
-           Console.WriteLine("Dokan CreateDirectory");
+           Console.WriteLine("Dokan CreateDirectory: " + filename);
            string targetPath = filename.Replace("\\", "/");
            if (allinone.CreateDirectory(targetPath))
                return DokanNet.DOKAN_SUCCESS;
@@ -71,11 +71,11 @@ namespace StarPan
         {
             Console.WriteLine("Dokan CreateFile, filename is " + filename);
             Dokan.DokanNet.DokanResetTimeout(1000 * 30, info);
-            //info.Context = count_++;
+            info.Context = Context++;
             string targetPath = filename.Replace("\\", "/");
             String name = GetFileName(targetPath);
 
-            #region 原方法 - 废弃，参考用
+            #region 老方法 - 废弃，参考
             //try
             //{
             //    if (filename == "\\")
@@ -89,7 +89,7 @@ namespace StarPan
 
             //    if (name == "desktop.ini" || name == "folder.jpg" || name == "folder.gif" || name == @".svn") return -DokanNet.ERROR_FILE_NOT_FOUND;
 
-               
+
 
 
 
@@ -193,7 +193,7 @@ namespace StarPan
 
             #endregion
             
-            #region Gdrive方法
+            #region 13/11/1添加改用新方法
 
             if (filename == "\\")
             {
@@ -202,20 +202,22 @@ namespace StarPan
                 return DokanNet.DOKAN_SUCCESS;
 
             }
-            if ((access & System.IO.FileAccess.Read) == System.IO.FileAccess.Read)
-            {   FileElement file = allinone.getSingleFileInfo(targetPath);
-                if(file!=null)
-                {
-                if (file.isdir==System.IO.FileAttributes.Normal)
-                {
-                    return DokanNet.DOKAN_SUCCESS;
-                }
 
-                if (file.isdir==System.IO.FileAttributes.Directory)
+            if (mode == FileMode.Open || mode == FileMode.OpenOrCreate)
+            {
+                FileElement file = allinone.getSingleFileInfo(targetPath);
+                if (file != null)
                 {
-                    info.IsDirectory = true;
-                    return DokanNet.DOKAN_SUCCESS;
-                }
+                    if (file.isdir == System.IO.FileAttributes.Normal)
+                    {
+                        return DokanNet.DOKAN_SUCCESS;
+                    }
+
+                    if (file.isdir == System.IO.FileAttributes.Directory)
+                    {
+                        info.IsDirectory = true;
+                        return DokanNet.DOKAN_SUCCESS;
+                    }
                 }
 
                 return -DokanNet.ERROR_FILE_NOT_FOUND;
@@ -543,15 +545,20 @@ namespace StarPan
             bool replace,
             DokanFileInfo info)
         {
-            return -1;
+            string fromPath = filename.Replace("\\", "/");
+            string toPath = newname.Replace("\\", "/");
+            if (allinone.MoveFile(fromPath, toPath)) return DokanNet.DOKAN_SUCCESS;
+            else return DokanNet.DOKAN_ERROR;
         }
 
         public int OpenDirectory(string filename, DokanFileInfo info)
         {
             Console.WriteLine("Dokan OpenDirectory, filename is " + filename);
-            string targetPath = filename.Replace("\\", "/");
-            if(allinone.getSingleFileInfo(targetPath)!=null)return DokanNet.DOKAN_SUCCESS;
-            return DokanNet.ERROR_PATH_NOT_FOUND;
+            info.Context = Context++;
+            //string targetPath = filename.Replace("\\", "/");
+            //if(allinone.getSingleFileInfo(targetPath)!=null)return DokanNet.DOKAN_SUCCESS;
+            //return DokanNet.ERROR_PATH_NOT_FOUND;
+            return DokanNet.DOKAN_SUCCESS;
         }
 
         public int ReadFile(
@@ -610,7 +617,7 @@ namespace StarPan
                 {
                     return -1;
                 }
-                //ms.Seek(offset, SeekOrigin.Begin);
+                ms.Seek(offset, SeekOrigin.Begin);
                 readBytes = (uint)ms.Read(buffer, 0, buffer.Length);
                 return result?0:-1;
             }
