@@ -2,20 +2,25 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{859E6E8E-C89C-447C-8E94-A1EBC42CB37A}</ProjectGuid>
+    <ProjectGuid>{7449726A-9631-4514-AB6E-FE1EE9558890}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>StarPan</RootNamespace>
-    <AssemblyName>StarPan</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <RootNamespace>BaiduCloudSDK</RootNamespace>
+    <AssemblyName>BaiduCloudSDK</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,9 +28,9 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -39,32 +44,20 @@
       <HintPath>..\lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AllinOne.cs" />
-    <Compile Include="BaiduPan.cs" />
-    <Compile Include="KuaiPan.cs" />
+    <Compile Include="BaiduCloudCommand.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="BaiduPCSDiskUtility.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StarPanOperations.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BaiduCloudAPI\BaiduCloudSDK.csproj">
-      <Project>{7449726A-9631-4514-AB6E-FE1EE9558890}</Project>
-      <Name>BaiduCloudSDK</Name>
-    </ProjectReference>
     <ProjectReference Include="..\DiskAPIBase\DiskAPIBase.csproj">
       <Project>{EACDFD73-4538-4F15-B2EC-61BC21D02A2C}</Project>
       <Name>DiskAPIBase</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DokanNet\DokanNet.csproj">
-      <Project>{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}</Project>
-      <Name>DokanNet</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\KuaiPanSDK\KuaiPanSDK.csproj">
-      <Project>{6DE0B543-4FF4-43EF-AD28-5D9F7B17A7AA}</Project>
-      <Name>KuaiPanSDK</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

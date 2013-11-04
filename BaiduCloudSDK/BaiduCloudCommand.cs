@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BaiduCloudAPI
+namespace BaiduCloudSDK
 {
     public class BaiduCloudCommand
     {

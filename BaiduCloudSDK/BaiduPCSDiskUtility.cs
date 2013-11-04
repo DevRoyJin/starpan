@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 using DiskAPIBase;
 
 
-namespace BaiduCloudAPI
+namespace BaiduCloudSDK
 {
     public class BaiduPCSDiskUtility : IDiskUtility
     {
