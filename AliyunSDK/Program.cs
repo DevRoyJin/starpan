@@ -10,12 +10,15 @@ namespace AliyunSDK
         [STAThread()]
         private static void Main(string[] args)
         {
+            //Just uncomment the code which you want to test.
+
             ////GetUsedSpace
+            #region GetQuota
             //Console.WriteLine("Aliyuan used space is:{0}",AliyunOssUtility.Instance.GetUsedSpace());
+            #endregion
 
-
-
-            ////upload
+            //upload
+            #region Upload
             //Console.WriteLine("Please input a file path:");
             //string path = Console.ReadLine();
             //if (File.Exists(path))
@@ -35,7 +38,7 @@ namespace AliyunSDK
             //            } while (fs.CanRead && count > 0);
             //            fd = ms.ToArray();
             //        }
-                    
+
             //        if (AliyunOssUtility.Instance.UploadFile(string.Format("app/{0}", Path.GetFileName(path)), fd))
             //        {
             //            Console.WriteLine("UploadFile {0} succeeded.", path);
@@ -46,58 +49,83 @@ namespace AliyunSDK
             //        }
             //    }
             //}
-            
+            #endregion
 
             //download
-            Console.WriteLine("Please input the file path you want to download from your bucket:");
-            string path = Console.ReadLine();
-            byte[] fileData;
-            if (AliyunOssUtility.Instance.DownloadFile(path, out fileData))
-            {
-                var fileName = "";
-                if (!string.IsNullOrEmpty(path))
-                {
-                    var array = path.Split('/');
-                    fileName = array[array.Length - 1];
-                }
-                if (fileData != null && fileData.Length > 0)
-                {
-                    string localPath = Path.Combine(@"d:\apps\", fileName);
-                    if (File.Exists(localPath))
-                    {
-                        File.Delete(localPath);
-                    }
-                    var fs = new FileStream(localPath, FileMode.CreateNew, FileAccess.ReadWrite);
-                    fs.BeginWrite(fileData, 0, fileData.Length, ar =>
-                        {
-                            fs.EndWrite(ar);
-                            fs.Close();
-                            fs = null;
-                        }, localPath);
-                }
-                
-                Console.WriteLine("Download {0} succeeded.", path);
-            }
-            else
-            {
-                Console.WriteLine("Download {0} failed.", path);
-            }
-
-          
-
-
-            ////mkdir
-            //string path = "app/test/";
-            //if (AliyunOssUtility.Instance.CreateDirectory("app/test/"))
+            #region Download
+            //Console.WriteLine("Please input the file path you want to download from your bucket:");
+            //string path = Console.ReadLine();
+            //byte[] fileData;
+            //if (AliyunOssUtility.Instance.DownloadFile(path, out fileData))
             //{
-            //    Console.WriteLine("The path {0} created succussfully.",path);
+            //    var fileName = "";
+            //    if (!string.IsNullOrEmpty(path))
+            //    {
+            //        var array = path.Split('/');
+            //        fileName = array[array.Length - 1];
+            //    }
+            //    if (fileData != null && fileData.Length > 0)
+            //    {
+            //        string localPath = Path.Combine(@"d:\apps\", fileName);
+            //        if (File.Exists(localPath))
+            //        {
+            //            File.Delete(localPath);
+            //        }
+            //        var fs = new FileStream(localPath, FileMode.CreateNew, FileAccess.ReadWrite);
+            //        fs.BeginWrite(fileData, 0, fileData.Length, ar =>
+            //            {
+            //                fs.EndWrite(ar);
+            //                fs.Close();
+            //                fs = null;
+            //            }, localPath);
+            //    }
+                
+            //    Console.WriteLine("Download {0} succeeded.", path);
             //}
             //else
             //{
-            //    Console.WriteLine("The path {0} wasn't created.", path);
+            //    Console.WriteLine("Download {0} failed.", path);
             //}
-            
-          
+            #endregion
+
+            ////mkdir
+            #region Create folder
+            //string path1 = "app/test3/";
+            //if (AliyunOssUtility.Instance.CreateDirectory(path1))
+            //{
+            //    Console.WriteLine("The path {0} created succussfully.", path1);
+            //}
+            //else
+            //{
+            //    Console.WriteLine("The path {0} wasn't created.", path1);
+            //}
+            #endregion
+
+            //delete folder/file
+            #region Delete Folder
+            //string filePath = "app/test/2013-2014(1)kb.doc";
+
+
+            //if (AliyunOssUtility.Instance.DeleteFile(filePath))
+            //{
+            //    Console.WriteLine("Delete file {0} succeeded.", filePath);
+            //}
+            //else
+            //{
+            //    Console.WriteLine("Delete file {0} failed.", filePath);
+            //}
+
+
+            //string folderPath = "app/test/";
+            //if (AliyunOssUtility.Instance.DeleteDirectory(folderPath))
+            //{
+            //    Console.WriteLine("Delete folder {0} succeeded.", folderPath);
+            //}
+            //else
+            //{
+            //    Console.WriteLine("Delete folder {0} failed.", folderPath);
+            //}
+            #endregion
 
             Console.ReadLine();
         }

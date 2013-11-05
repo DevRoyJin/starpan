@@ -21,6 +21,7 @@ namespace AliyunSDK
 
         private AliyunOssUtility()
         {
+            //代理
             if (WebUtiltiy.IsProxyEnable)
             {
                 var proxy = WebRequest.GetSystemWebProxy();
@@ -44,8 +45,9 @@ namespace AliyunSDK
                 //clientConfig.ConnectionTimeout = HttpWebResponseUtility.DefaultRequestTimeout;
 
 
-                _ossClient = new OssClient(new Uri(EndPoint), AccessKey, AccessSecret,clientConfig);
+                _ossClient = new OssClient(edUri, AccessKey, AccessSecret, clientConfig);
             }
+            //非代理
             else
             {
                 _ossClient = new OssClient(EndPoint, AccessKey, AccessSecret);
@@ -67,8 +69,6 @@ namespace AliyunSDK
                 return _utility;
             }
         }
-
-
 
         #region [IDiskUtility members]
         public long GetQuota()
@@ -147,7 +147,9 @@ namespace AliyunSDK
         {
             try
             {
-                _ossClient.PutObject(BucketName, path, null, null);
+                var metaData = new ObjectMetadata();
+                metaData.ContentType = "application/x-www-form-urlencoded";
+                _ossClient.PutObject(BucketName, path, new MemoryStream(), metaData);
                 return true;
             }
             catch (OssException ossEx)
@@ -166,12 +168,44 @@ namespace AliyunSDK
 
         public bool DeleteDirectory(string path)
         {
-            throw new NotImplementedException();
+            try
+            {
+                //if (path.Contains("/"))
+                //{
+                //    var arr = path.EndsWith("/")?path.Substring(0,path.Length-1).Split('/'):path.Split('/');
+                //    var folderInfo = _ossClient.GetObjectMetadata(BucketName,arr[arr.Length-1]);
+                //}
+                _ossClient.DeleteObject(BucketName,path);
+                return true;
+            }
+            catch (OssException ossEx)
+            {
+                Console.WriteLine("OSS operation failed, error code:{0},error msg:{1} ", ossEx.ErrorCode, ossEx.Message);
+
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("Generic error: {0}", exception.Message);
+            }
+            return false;
         }
 
         public bool DeleteFile(string path)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _ossClient.DeleteObject(BucketName,path);
+                return true;
+            }
+            catch (OssException ossEx)
+            {
+                Console.WriteLine("OSS operation failed, error code:{0},error msg:{1} ", ossEx.ErrorCode, ossEx.Message);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("Generic error: {0}", exception.Message);
+            }
+            return false;
         }
 
         #endregion
