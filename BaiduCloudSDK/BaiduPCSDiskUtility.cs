@@ -106,7 +106,7 @@ namespace BaiduCloudSDK
                 var json = "";
                 if (fileInfo.Length > SingleFileLengthLimitation)
                 {
-                    //分片上传（大文件）
+                    //分片上传（>2G大文件）
                     Console.WriteLine("The file is too large, don't supported now!");
                     return false;
                 }

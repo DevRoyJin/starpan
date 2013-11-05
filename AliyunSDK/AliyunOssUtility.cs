@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
+using Aliyun.OpenServices;
 using DiskAPIBase;
 using Aliyun.OpenServices.OpenStorageService;
 
@@ -19,7 +21,36 @@ namespace AliyunSDK
 
         private AliyunOssUtility()
         {
-            _ossClient = new OssClient(EndPoint,AccessKey, AccessSecret);
+            if (WebUtiltiy.IsProxyEnable)
+            {
+                var proxy = WebRequest.GetSystemWebProxy();
+                var clientConfig = new ClientConfiguration();
+                var edUri = new Uri(EndPoint);
+                var proxyUri = proxy.GetProxy(edUri);
+
+                clientConfig.ProxyHost = proxyUri.Host;
+                clientConfig.ProxyPort = proxyUri.Port;
+                if (proxy.Credentials != null)
+                {
+                    var credential = proxy.Credentials.GetCredential(edUri, "Basic");
+                    if (credential != null)
+                    {
+                        clientConfig.ProxyUserName = credential.UserName;
+                        clientConfig.ProxyPassword = credential.Password;
+                        clientConfig.ProxyDomain = credential.Domain;
+                    }
+                }
+
+                //clientConfig.ConnectionTimeout = HttpWebResponseUtility.DefaultRequestTimeout;
+
+
+                _ossClient = new OssClient(new Uri(EndPoint), AccessKey, AccessSecret,clientConfig);
+            }
+            else
+            {
+                _ossClient = new OssClient(EndPoint, AccessKey, AccessSecret);
+
+            }
         }
 
         private static AliyunOssUtility _utility;
@@ -47,9 +78,21 @@ namespace AliyunSDK
 
         public long GetUsedSpace()
         {
-            return _ossClient.ListObjects(BucketName).ObjectSummaries.Sum(o => o.Size);
+            try
+            {
+                return _ossClient.ListObjects(BucketName).ObjectSummaries.Sum(o => o.Size);
+            }
+            catch (OssException ossEx)
+            {
+                Console.WriteLine("OSS operation failed, error code:{0},error msg:{1} ", ossEx.ErrorCode, ossEx.Message);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("Generic error: {0}", exception.Message);
+            }
+            return -1;
         }
-
+        
         public long GetFreeSpace()
         {
             return Int64.MaxValue;
@@ -66,8 +109,7 @@ namespace AliyunSDK
             }
             catch (OssException ossEx)
             {
-                Console.WriteLine("OSS operation failed: {0}", ossEx.Message);
-
+                Console.WriteLine("OSS operation failed, error code:{0},error msg:{1} ", ossEx.ErrorCode, ossEx.Message);
             }
             catch (Exception exception)
             {
@@ -76,9 +118,29 @@ namespace AliyunSDK
             return false;
         }
 
-        public bool DownloadFile(string pcsPath, out byte[] filebuffer)
+        public bool DownloadFile(string path, out byte[] fileData)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var getObjReq = new GetObjectRequest(BucketName, path);
+                using (var stream = new MemoryStream())
+                {
+                    _ossClient.GetObject(getObjReq,stream);
+                    fileData = stream.ToArray();
+                    return true;
+                }
+                
+            }
+            catch (OssException ossEx)
+            {
+                Console.WriteLine("OSS operation failed, error code:{0},error msg:{1} ",ossEx.ErrorCode, ossEx.Message);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("Generic error: {0}", exception.Message);
+            }
+            fileData = null;
+            return false;
         }
 
         public bool CreateDirectory(string path)
@@ -90,7 +152,7 @@ namespace AliyunSDK
             }
             catch (OssException ossEx)
             {
-                Console.WriteLine("OSS operation failed: {0}", ossEx.Message);
+                Console.WriteLine("OSS operation failed, error code:{0},error msg:{1} ", ossEx.ErrorCode, ossEx.Message);
                 
             }
             catch (Exception exception)
@@ -102,12 +164,12 @@ namespace AliyunSDK
 
         }
 
-        public bool DeleteDirectory(string pcsPath)
+        public bool DeleteDirectory(string path)
         {
             throw new NotImplementedException();
         }
 
-        public bool DeleteFile(string pcsPath)
+        public bool DeleteFile(string path)
         {
             throw new NotImplementedException();
         }
