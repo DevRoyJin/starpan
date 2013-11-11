@@ -233,7 +233,13 @@ namespace StarPan
 
         public int DeleteDirectory(string filename, DokanFileInfo info)
         {
-            return -1;
+            string targetPath = filename.Replace("\\", "/");
+            if (allinone.removeFile(targetPath))
+            {
+                return DokanNet.DOKAN_SUCCESS;
+            }
+
+            return DokanNet.DOKAN_ERROR;
         }
 
         public int DeleteFile(string filename, DokanFileInfo info)
