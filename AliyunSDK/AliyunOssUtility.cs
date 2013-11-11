@@ -19,7 +19,7 @@ namespace AliyunSDK
 
         private readonly OssClient _ossClient;
 
-        private AliyunOssUtility()
+        public AliyunOssUtility()
         {
             //代理
             if (WebUtiltiy.IsProxyEnable)

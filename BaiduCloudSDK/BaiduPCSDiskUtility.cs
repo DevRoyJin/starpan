@@ -22,6 +22,12 @@ namespace BaiduCloudSDK
         private const string AccessToken = "3.a0fdecf6c512ce56ff547b1fcbdc9750.2592000.1386781278.4195463253-248414";
         #endregion
 
+        public BaiduPCSDiskUtility()
+        {
+            
+        }
+
+
         private static BaiduPCSDiskUtility _utility;
 
         public static BaiduPCSDiskUtility Instance

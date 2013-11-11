@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using Dokan;
 using System.Net;
@@ -10,11 +11,14 @@ namespace StarPan
 {
     class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
+            //get disk utility by some strategy
+            var utility = CloudDiskManager.Instance.GetClouDisk(list => list.FirstOrDefault());
+            Console.WriteLine("Get Utility {0}", utility.GetType());
 
 
-           // AllinOne te = new AllinOne();
+            // AllinOne te = new AllinOne();
 
             //Console.ReadLine();
 
@@ -26,7 +30,7 @@ namespace StarPan
             opt.RemovableDrive = true;
             int status = DokanNet.DokanMain(opt, new StarPanOperations());
 
-            
+
 
             switch (status)
             {
