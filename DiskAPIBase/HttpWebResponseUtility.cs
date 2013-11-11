@@ -232,7 +232,7 @@ namespace DiskAPIBase
             //构造上传文件post数据
             if (!string.IsNullOrEmpty(filePath))
             {
-                if (File.Exists(filePath))
+                if (System.IO.File.Exists(filePath))
                 {
                     //FileName
                     postDataBuilder.Append(boundary);
@@ -296,6 +296,7 @@ namespace DiskAPIBase
         public static string ConstructFileUploadPostData(string fileName, byte[] fileData, string appPath,
             string boundary)
         {
+            boundary = "--" + boundary;
             if (fileData == null || fileData.Length == 0)
             {
                 throw new InvalidOperationException("File Data is null.");

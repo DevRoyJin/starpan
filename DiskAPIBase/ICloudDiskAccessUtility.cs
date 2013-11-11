@@ -1,4 +1,8 @@
-﻿namespace DiskAPIBase
+﻿using System.Collections;
+using System.Collections.Generic;
+using DiskAPIBase.File;
+
+namespace DiskAPIBase
 {
     public interface ICloudDiskAccessUtility
     {   
@@ -56,6 +60,13 @@
         /// <param name="filePath">删除文件夹路径</param>
         /// <returns>true为成功，false为失败</returns>
         bool DeleteFile(string filePath);
+
+        /// <summary>
+        /// 获取路径下文件或目录列表
+        /// </summary>
+        /// <param name="dirPath">文件夹路径</param>
+        /// <returns>文件或目录列表</returns>
+        IList<CloudFileInfo> GetFileList(string dirPath);
 
     }
 }

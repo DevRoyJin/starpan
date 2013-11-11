@@ -208,6 +208,13 @@ namespace AliyunSDK
             return false;
         }
 
+        public IList<DiskAPIBase.File.CloudFileInfo> GetFileList(string dirPath)
+        {
+            throw new NotImplementedException();
+        }
         #endregion
+
+
+
     }
 }
