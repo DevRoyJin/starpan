@@ -34,7 +34,7 @@ namespace DiskAPIBase.File
         }
 
         /// <summary>
-        ///  网盘文件或目录大小
+        ///  网盘文件或目录大小(若为目录，则返回0)
         /// </summary>
         public long Size
         {

@@ -127,6 +127,17 @@ namespace AliyunSDK
             //}
             #endregion
 
+            //get file list
+            #region Get File List
+
+            var list = AliyunOssUtility.Instance.GetFileList("app/test/");
+            foreach (var f in list)
+            {
+                Console.WriteLine("FileName:{0}\r\nCreationTime:{1}\r\nModificationTime:{2}\r\nSize:{3}\r\nIsDir:{4}\r\n------------------------------------",
+                        f.Path,new DateTime(f.CreateTime),new DateTime(f.ModifiyTime),f.Size,f.IsDir);
+            }
+            #endregion
+
             Console.ReadLine();
         }
     }
