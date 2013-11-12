@@ -233,7 +233,9 @@ namespace StarPan
 
         public int DeleteDirectory(string filename, DokanFileInfo info)
         {
+           
             string targetPath = filename.Replace("\\", "/");
+            Console.WriteLine("Dokan DeleteDirectory: {0}", targetPath);
             if (allinone.removeFile(targetPath))
             {
                 return DokanNet.DOKAN_SUCCESS;
@@ -245,6 +247,7 @@ namespace StarPan
         public int DeleteFile(string filename, DokanFileInfo info)
         {
             string targetPath = filename.Replace("\\", "/");
+            Console.WriteLine("Dokan DeleteFile: {0}", targetPath);
             if (allinone.removeFile(targetPath))
             {
                 return DokanNet.DOKAN_SUCCESS;

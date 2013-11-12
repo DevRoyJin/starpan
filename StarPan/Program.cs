@@ -14,8 +14,8 @@ namespace StarPan
         private static void Main(string[] args)
         {
             //get disk utility by some strategy
-            var utility = CloudDiskManager.Instance.GetClouDisk(list => list.FirstOrDefault());
-            Console.WriteLine("Get Utility {0}", utility.GetType());
+            //var utility = CloudDiskManager.Instance.GetClouDisk(list => list.FirstOrDefault());
+            //Console.WriteLine("Get Utility {0}", utility.GetType());
 
 
             // AllinOne te = new AllinOne();

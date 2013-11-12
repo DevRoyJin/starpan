@@ -19,7 +19,7 @@ namespace BaiduCloudSDK
         private const string PcsPath = @"/apps/sjtupan";
         private const long SingleFileLengthLimitation = 2147483648L;
         private const string DefaultUrl = "";
-        private const string AccessToken = "3.a0fdecf6c512ce56ff547b1fcbdc9750.2592000.1386781278.4195463253-248414";
+        private const string AccessToken = "3.610e76fb259ee1c0cee211b548ff1a40.2592000.1385016898.1477197110-1567359";
         #endregion
 
         public BaiduPCSDiskUtility()

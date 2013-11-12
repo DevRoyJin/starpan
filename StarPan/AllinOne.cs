@@ -311,6 +311,7 @@ namespace StarPan
 
         public bool removeFile(string path)
         {
+            Console.WriteLine("To remove file, file name is {0}", path);
             bool result = true;
             FileElement fileTobeRemoved = null;
             foreach (FileElement file in AllFiles)
