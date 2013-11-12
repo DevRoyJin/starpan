@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using Aliyun.OpenServices;
 using DiskAPIBase;
+using DiskAPIBase.File;
 using Aliyun.OpenServices.OpenStorageService;
 
 namespace AliyunSDK
@@ -210,7 +211,28 @@ namespace AliyunSDK
 
         public IList<DiskAPIBase.File.CloudFileInfo> GetFileList(string dirPath)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var oList = _ossClient.ListObjects(BucketName, dirPath);
+                return oList.ObjectSummaries.Where(oos=>oos.Key!=dirPath).Select(oos => new CloudFileInfo
+                    {
+                        Path = oos.Key,
+                        CreateTime = oos.LastModified.Ticks,
+                        ModifiyTime = oos.LastModified.Ticks,
+                        IsDir = oos.Key.EndsWith("/"),
+                        Size = oos.Size
+                    }).ToList();
+
+            }
+            catch (OssException ossEx)
+            {
+                Console.WriteLine("OSS operation failed, error code:{0},error msg:{1} ", ossEx.ErrorCode, ossEx.Message);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("Generic error: {0}", exception.Message);
+            }
+            return null;
         }
         #endregion
 
