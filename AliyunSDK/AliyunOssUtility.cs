@@ -234,9 +234,40 @@ namespace AliyunSDK
             }
             return null;
         }
+
+        public CloudFileInfo GetFileInfo(string path)
+        {
+            try
+            {
+                var listObjReq = new ListObjectsRequest(BucketName);
+                listObjReq.Prefix = path;
+                listObjReq.MaxKeys = 1;
+
+                var oList = _ossClient.ListObjects(listObjReq);
+                var objSummary = oList.ObjectSummaries.FirstOrDefault(oos => oos.Key == path);
+                if (objSummary != null)
+                {
+                    return new CloudFileInfo()
+                    {
+                        Path = objSummary.Key,
+                        CreateTime = objSummary.LastModified.Ticks,
+                        ModifiyTime = objSummary.LastModified.Ticks,
+                        IsDir = objSummary.Key.EndsWith("/"),
+                        Size = objSummary.Size
+                    };
+                }
+            }
+            catch (OssException ossEx)
+            {
+                Console.WriteLine("OSS operation failed, error code:{0},error msg:{1} ", ossEx.ErrorCode, ossEx.Message);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("Generic error: {0}", exception.Message);
+            }
+            return null;
+        }
         #endregion
-
-
 
     }
 }

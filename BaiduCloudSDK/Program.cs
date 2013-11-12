@@ -13,13 +13,13 @@ namespace BaiduCloudSDK
         {
             #region upload
             ////upload
-            using (var fs = File.Open(@"C:\Users\Roy\Desktop\2013-2014(1)kb.doc", FileMode.Open))
-            {
-                byte[] buf = new byte[fs.Length];
-                fs.Read(buf, 0, (int)fs.Length);
-                var res = BaiduPCSDiskUtility.Instance.UploadFile("/apps/测试应用/test/2013-2014(1)kb.doc", buf);
-                Console.WriteLine(res);
-            }
+            //using (var fs = File.Open(@"C:\Users\Roy\Desktop\2013-2014(1)kb.doc", FileMode.Open))
+            //{
+            //    byte[] buf = new byte[fs.Length];
+            //    fs.Read(buf, 0, (int)fs.Length);
+            //    var res = BaiduPCSDiskUtility.Instance.UploadFile("/apps/测试应用/test/2013-2014(1)kb.doc", buf);
+            //    Console.WriteLine(res);
+            //}
             
             #endregion
 

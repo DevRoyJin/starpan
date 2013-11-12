@@ -68,5 +68,13 @@ namespace DiskAPIBase
         /// <returns>文件或目录列表</returns>
         IList<CloudFileInfo> GetFileList(string dirPath);
 
+        /// <summary>
+        /// 获取某一文件/目录信息
+        /// </summary>
+        /// <param name="path">文件或目录路径</param>
+        /// <returns></returns>
+        CloudFileInfo GetFileInfo(string path);
+
+
     }
 }

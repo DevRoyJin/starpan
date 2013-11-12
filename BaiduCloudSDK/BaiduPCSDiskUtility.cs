@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using DiskAPIBase.File;
 using Newtonsoft;
@@ -343,6 +344,51 @@ namespace BaiduCloudSDK
             }
             return null;
         }
+
+        public CloudFileInfo GetFileInfo(string path)
+        {
+            try
+            {
+                var ret = GetFileInfoInternal(path);
+                var responseJo =
+                    (JObject)JsonConvert.DeserializeObject(ret);
+                var sFileList = JsonConvert.DeserializeObject<List<JObject>>(responseJo["list"].ToString());
+                var jo = sFileList[0];
+                return new CloudFileInfo
+                {
+                    Path = jo["path"].ToString(),
+                    CreateTime = jo["ctime"].ToObject<long>(),
+                    ModifiyTime = jo["mtime"].ToObject<long>(),
+                    Size = jo["size"].ToObject<long>(),
+                    IsDir = jo["isdir"].ToObject<int>() == 1
+
+                };
+            }
+            catch (WebException we)
+            {
+                var msg = "";
+                var res = we.Response as HttpWebResponse;
+                if (res != null)
+                {
+                    var sRes = HttpWebResponseUtility.ConvertReponseToString(res);
+                    var jsRes = (JObject)JsonConvert.DeserializeObject(sRes);
+                    if (jsRes != null && jsRes["error_msg"] != null)
+                    {
+                        msg = "Get file info {0} failed:" + jsRes["error_msg"].ToString();
+                    }
+                }
+                if (string.IsNullOrEmpty(msg))
+                {
+                    msg = "Get file list {0} failed:" + we.Message;
+                }
+                Console.WriteLine(msg, path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+            return null;
+        }
         #endregion
 
         #region Private Methods
@@ -422,8 +468,16 @@ namespace BaiduCloudSDK
                 HttpWebResponseUtility.DefaultRequestTimeout, null, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
         }
-        #endregion
 
+        private string GetFileInfoInternal(string pcsPath)
+        {
+            var url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
+            url = string.Format(url, BaiduCloudCommand.GetFileInfoCommand, AccessToken, pcsPath);
+            var response = HttpWebResponseUtility.CreateGetHttpResponse(url,
+                HttpWebResponseUtility.DefaultRequestTimeout, null, null);
+            return HttpWebResponseUtility.ConvertReponseToString(response);
+        }
+        #endregion
     }
 
 }
