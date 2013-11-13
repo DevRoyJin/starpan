@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{859E6E8E-C89C-447C-8E94-A1EBC42CB37A}</ProjectGuid>
+    <ProjectGuid>{757204FF-197B-4352-A1DF-4774CFEF7C28}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>StarPan</RootNamespace>
-    <AssemblyName>StarPan</AssemblyName>
+    <RootNamespace>CloudDiskTest</RootNamespace>
+    <AssemblyName>CloudDiskTest</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -34,28 +34,16 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AllinOne.cs" />
-    <Compile Include="BaiduPan.cs" />
-    <Compile Include="CloudDiskManager.cs" />
-    <Compile Include="KuaiPan.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StarPanOperations.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AliyunSDK\AliyunSDK.csproj">
       <Project>{BA7FCDD0-D791-4CBC-A3B1-023A9EC57B1C}</Project>
       <Name>AliyunSDK</Name>
-      <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\BaiduCloudSDK\BaiduCloudSDK.csproj">
       <Project>{7449726A-9631-4514-AB6E-FE1EE9558890}</Project>
@@ -65,19 +53,6 @@
       <Project>{EACDFD73-4538-4F15-B2EC-61BC21D02A2C}</Project>
       <Name>DiskAPIBase</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DokanNet\DokanNet.csproj">
-      <Project>{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}</Project>
-      <Name>DokanNet</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\KuaiPanSDK\KuaiPanSDK.csproj">
-      <Project>{6DE0B543-4FF4-43EF-AD28-5D9F7B17A7AA}</Project>
-      <Name>KuaiPanSDK</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config">
-      <SubType>Designer</SubType>
-    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
