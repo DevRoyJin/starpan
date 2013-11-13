@@ -5,6 +5,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Text;
 using Dokan;
 using System.Net;
+using AliyunSDK;
 
 
 namespace StarPan
@@ -18,9 +19,6 @@ namespace StarPan
             //Console.WriteLine("Get Utility {0}", utility.GetType());
 
 
-            // AllinOne te = new AllinOne();
-
-            //Console.ReadLine();
 
             DokanOptions opt = new DokanOptions();
             opt.MountPoint = "r:\\";

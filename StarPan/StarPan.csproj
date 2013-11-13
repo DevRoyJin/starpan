@@ -51,6 +51,11 @@
     <Compile Include="StarPanOperations.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\AliyunSDK\AliyunSDK.csproj">
+      <Project>{BA7FCDD0-D791-4CBC-A3B1-023A9EC57B1C}</Project>
+      <Name>AliyunSDK</Name>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\BaiduCloudSDK\BaiduCloudSDK.csproj">
       <Project>{7449726A-9631-4514-AB6E-FE1EE9558890}</Project>
       <Name>BaiduCloudSDK</Name>

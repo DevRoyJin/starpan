@@ -511,7 +511,7 @@ namespace StarPan
                     #endregion
 
                     #region 查找List<FileElement>中的对应文件信息
-                    FileElement file = allinone.searchFile(targetPath);
+                    FileElement file = allinone.getSingleFileInfo(targetPath);
                     if (file == null) return DokanNet.ERROR_FILE_NOT_FOUND;
                     else
                     {

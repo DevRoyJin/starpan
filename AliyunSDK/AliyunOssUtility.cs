@@ -14,9 +14,13 @@ namespace AliyunSDK
     public class AliyunOssUtility : ICloudDiskAccessUtility
     {
         private const string EndPoint = "http://oss.aliyuncs.com";
-        private const string AccessKey = "Y8HLBRjlRgKp5SXV";
-        private const string AccessSecret = "6nRLip0xiul2CZVsTDe36TYoqD09YT";
-        private const string BucketName = "localclouddisk";
+        private const string AccessKey = "VsIMICnWBc7lqnaa";
+        private const string AccessSecret = "KiYYh5t9i4jcEPyEWk0oxvKowm6SJk";
+        private const string BucketName = "sjtupan";
+        //add download buffer to avoid repeated download request
+        private byte[] downloadBuffer=null;
+        private string lastDownloadPath=null;
+
 
         private readonly OssClient _ossClient;
 
@@ -121,6 +125,17 @@ namespace AliyunSDK
 
         public bool DownloadFile(string path, out byte[] fileData)
         {
+            //add download buffer to avoid duplicated download request
+            if (path == lastDownloadPath && downloadBuffer != null)
+            {
+                fileData = downloadBuffer; //return data if it is same as last request
+                return true;
+            }
+            else
+            {
+                lastDownloadPath = path;
+            }
+
             try
             {
                 var getObjReq = new GetObjectRequest(BucketName, path);
@@ -128,6 +143,7 @@ namespace AliyunSDK
                 {
                     _ossClient.GetObject(getObjReq,stream);
                     fileData = stream.ToArray();
+                    downloadBuffer = fileData; //store downloaded data to buffer
                     return true;
                 }
                 
@@ -212,7 +228,7 @@ namespace AliyunSDK
         public IList<DiskAPIBase.File.CloudFileInfo> GetFileList(string dirPath)
         {
             try
-            {
+            { 
                 var oList = _ossClient.ListObjects(BucketName, dirPath);
                 return oList.ObjectSummaries.Where(oos=>oos.Key!=dirPath).Select(oos => new CloudFileInfo
                     {

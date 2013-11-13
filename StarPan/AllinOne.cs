@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using BaiduCloudSDK;
+using AliyunSDK;
 
 namespace StarPan
 {
@@ -38,6 +39,7 @@ namespace StarPan
             AllFiles = new List<FileElement>();
             getFiles_Baidu(""); //从根遍历文件
             getFiles_KuaiPan("");//从根遍历文件
+            getFiles_OSS("");//从根遍历文件
             Console.WriteLine("Get files list completed");
         }
 
@@ -123,6 +125,39 @@ namespace StarPan
             }
         }
 
+        public void getFiles_OSS(string path)
+        {
+            
+            var list = AliyunOssUtility.Instance.GetFileList(path);
+            foreach (var f in list)
+            {
+                f.Path = "/" + f.Path;
+                FileElement finfo = new FileElement();
+               
+                if (f.IsDir == true)
+                {
+                    finfo.name = GetFileName(f.Path.Substring(0, f.Path.LastIndexOf('/')));
+                    finfo.parentPath = GetPathPart(f.Path.Substring(0, f.Path.LastIndexOf('/')));
+                    finfo.isdir = System.IO.FileAttributes.Directory;
+                    //getFiles_OSS(f.Path.Substring(0, f.Path.LastIndexOf('/'))); //如果是目录，则截取目录路径，OSS返回的f.path为folder/的形式，注意最后带有/符号
+                }
+                else
+                {
+                    finfo.isdir = System.IO.FileAttributes.Normal;
+                    finfo.parentPath = GetPathPart(f.Path);
+                    finfo.name = GetFileName(f.Path);
+                }
+                finfo.accessTime = new DateTime(f.ModifiyTime);
+                finfo.motifyTime = new DateTime(f.ModifiyTime);
+                finfo.createTime = new DateTime(f.CreateTime);
+                finfo.origin = 2;
+                
+                finfo.size = f.Size;
+                AllFiles.Add(finfo);
+            }
+        
+        }
+
         #endregion
 
         public List<FileElement> returnAllFiles()
@@ -130,15 +165,6 @@ namespace StarPan
             return AllFiles;
         }
 
-        public FileElement searchFile(string path) //按照文件名查找List中的文件
-        {
-            
-            foreach (FileElement file in AllFiles)
-            {
-                if (file.parentPath+file.name == path) return file;
-            }
-            return null;
-        }
 
         public FileElement getSingleFileInfo(string path) //按照绝对路径查询List中的文件
         {
@@ -175,7 +201,7 @@ namespace StarPan
 
                         if (file.origin == 2)
                         {
-
+                            result = AliyunOssUtility.Instance.DownloadFile(path.Substring(path.IndexOf("/") + 1), out buffer);
                         }
                     }
                 }
@@ -200,7 +226,11 @@ namespace StarPan
 
 
                         }
-                        else if (file.origin == 2) { }
+                        else if (file.origin == 2) 
+                        {
+                            Console.WriteLine("Read file from OSS, file name is " + path);
+                            result = AliyunOssUtility.Instance.DownloadFile(path.Substring(path.IndexOf("/") + 1), out buffer);
+                        }
 
 
                     }
@@ -255,7 +285,7 @@ namespace StarPan
             if (GetPathPart(path) == "/")
             {
                 Random rd = new Random();
-                int i = rd.Next(0, 2);
+                int i = rd.Next(0, 3);
                 Console.WriteLine("Random number is " + i);
                 if (i == 0)
                 {
@@ -267,7 +297,11 @@ namespace StarPan
                     Console.WriteLine("New file create in KuaiPan");
                     result = KuaiPan.UploadFile(path, uploadTotalBuffer);
                 }
-                else if (i == 2) { }
+                else if (i == 2) 
+                {
+                    Console.WriteLine("New file create in OSS");
+                    result = AliyunOssUtility.Instance.UploadFile(path.Substring(path.IndexOf("/") + 1),uploadTotalBuffer);
+                }
 
                 ToUploadFile.origin = i;
             }
@@ -288,7 +322,11 @@ namespace StarPan
                             Console.WriteLine("New file create in KuaiPan");
                             result = KuaiPan.UploadFile(path, uploadTotalBuffer);
                         }
-                        else if (file.origin == 2) { }
+                        else if (file.origin == 2) 
+                        {
+                            Console.WriteLine("New file create in OSS");
+                            result = AliyunOssUtility.Instance.UploadFile(path.Substring(path.IndexOf("/") + 1), uploadTotalBuffer);
+                        }
 
                         ToUploadFile.origin = file.origin;
                     }
@@ -329,7 +367,7 @@ namespace StarPan
                     }
                     else if (file.origin == 2)
                     {
-                        //others
+                        result = AliyunOssUtility.Instance.DeleteFile(path.Substring(path.IndexOf("/") + 1));
                     }
                     fileTobeRemoved = file;
                 }
@@ -358,7 +396,7 @@ namespace StarPan
             if (GetPathPart(path) == "/")
             {
                 Random rd = new Random();
-                int i = rd.Next(0, 2);
+                int i = rd.Next(0, 3);
                 //Console.WriteLine("Random number is " + i);
                 if (i == 0)
                 {
@@ -370,7 +408,11 @@ namespace StarPan
                     Console.WriteLine("New directory create in KuaiPan");
                     result=KuaiPan.CreateDirectory(path);
                 }
-                else if (i == 2) { }
+                else if (i == 2) 
+                {
+                    Console.WriteLine("New directory create in OSS");
+                    result = AliyunOssUtility.Instance.CreateDirectory(path.Substring(path.IndexOf("/") + 1)+"/");
+                }
 
                 newfile.origin = i;
             }
@@ -391,7 +433,11 @@ namespace StarPan
                             Console.WriteLine("New directory create in KuaiPan");
                             result=KuaiPan.CreateDirectory(path);
                         }
-                        else if (file.origin == 2) { }
+                        else if (file.origin == 2) 
+                        {
+                            Console.WriteLine("New directory create in OSS");
+                            result = AliyunOssUtility.Instance.CreateDirectory(path.Substring(path.IndexOf("/") + 1)+"/");
+                        }
 
                         newfile.origin = file.origin;
                     }
@@ -418,10 +464,15 @@ namespace StarPan
         public bool MoveFile(string fromPath, string toPath)
         {
             bool result=true;
+            FileElement fileToBeMoved=null;
+            FileElement newFile = null ;
+
             foreach (FileElement file in AllFiles) //find file info from List
             {
                 if (file.parentPath + file.name == fromPath) //path could be found in List
                 {
+                    fileToBeMoved = file;
+                    newFile = file;
                     if (file.origin == 0) //from Baidu pan
                     {
                         result = BaiduPan.MoveFile(fromPath, toPath);
@@ -435,18 +486,32 @@ namespace StarPan
 
                     if (file.origin == 2)
                     {
-
+                        
                     }
                     if (result)
                     {
-                        file.name = GetFileName(toPath);
-                        file.parentPath = GetPathPart(toPath);
-                        file.motifyTime = DateTime.Now;
-                        
+                        newFile.name = GetFileName(toPath);
+                        newFile.parentPath = GetPathPart(toPath);
+                        newFile.motifyTime = DateTime.Now;
+                        newFile.createTime = DateTime.Now;
+                        newFile.accessTime = DateTime.Now;
+                        newFile.origin = file.origin;
+                        newFile.size = file.size;
+                        newFile.isdir = file.isdir;
+
                     }
+                    else
+                    {
+                        return false;
+                    }
+
 
                 }
             }
+            AllFiles.Remove(fileToBeMoved);
+            AllFiles.Add(newFile);
+
+            
 
 
             return result;
