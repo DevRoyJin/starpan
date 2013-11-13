@@ -171,11 +171,9 @@ namespace AliyunSDK
         {
             try
             {
-                //if (path.Contains("/"))
-                //{
-                //    var arr = path.EndsWith("/")?path.Substring(0,path.Length-1).Split('/'):path.Split('/');
-                //    var folderInfo = _ossClient.GetObjectMetadata(BucketName,arr[arr.Length-1]);
-                //}
+                //TODO:需要递归删除所有子文件
+                
+                //delete itself
                 _ossClient.DeleteObject(BucketName,path);
                 return true;
             }
@@ -267,7 +265,37 @@ namespace AliyunSDK
             }
             return null;
         }
+
+        public bool Move(string path, string newPath)
+        {         
+            try
+            {
+                //Copy first
+                var copyReq = new CopyObjectRequest(BucketName, path, BucketName, newPath);
+                var copyResult = _ossClient.CopyObject(copyReq);
+                if (copyResult != null)
+                {
+                    //copy succeed, delete the origin object
+                    _ossClient.DeleteObject(BucketName,path);
+                    return true;
+                }
+                
+            }
+            catch (OssException ossEx)
+            {
+                Console.WriteLine("OSS operation failed, error code:{0},error msg:{1} ", ossEx.ErrorCode, ossEx.Message);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("Generic error: {0}", exception.Message);
+            }
+            return false;
+
+        }
         #endregion
+
+
+
 
     }
 }

@@ -10,7 +10,9 @@ namespace BaiduCloudSDK
         public const string UploadCommand = "upload";
         public const string DownloadCommand = "download";
         public const string MakeDirCommand = "mkdir";
+        public const string DeleteCommand = "delete";
         public const string GetFileListCommand = "list";
         public const string GetFileInfoCommand = "meta";
+        public const string MoveCommand = "move";
     }
 }

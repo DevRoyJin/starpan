@@ -76,5 +76,14 @@ namespace DiskAPIBase
         CloudFileInfo GetFileInfo(string path);
 
 
+        /// <summary>
+        /// 移动文件夹或文件（当）
+        /// </summary>
+        /// <param name="path">原文件夹/文件路径</param>
+        /// <param name="newName">目标文件夹/文件路径</param>
+        /// <returns>true为成功，false为失败</returns>
+        bool Move(string path, string newName);
+
+
     }
 }
