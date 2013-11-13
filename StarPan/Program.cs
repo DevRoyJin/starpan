@@ -13,10 +13,10 @@ namespace StarPan
 {
     class Program
     {
-        private static ICloudDiskAccessUtility GetUtiltiy(IEnumerable<ICloudDiskAccessUtility> list)
-        {
-            return list.OrderBy(li => li.GetFreeSpace()).LastOrDefault();
-        }
+        //private static ICloudDiskAccessUtility GetUtiltiy(IEnumerable<ICloudDiskAccessUtility> list)
+        //{
+        //    return list.LastOrDefault();
+        //}
 
         private static void Main(string[] args)
         {

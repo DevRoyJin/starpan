@@ -25,8 +25,9 @@ namespace StarPan
                 {
                     _mCloudDisks.Add(utility);
                 }
-
             }
+            //快盘在StarPan中另有实现了ICloudDiskAccessUtility接口的类KuaiPan.cs,它包装了原有的KuaiPan sdk，所以这里手动将KuaiPan类实例添加进集合
+            _mCloudDisks.Add(new KuaiPan());
         }
 
         private static CloudDiskManager _cloudDiskManager;

@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using BaiduCloudSDK;
 using AliyunSDK;
+using DiskAPIBase;
 
 namespace StarPan
 {
@@ -27,7 +28,7 @@ namespace StarPan
         public List<FileElement> AllFiles { get; set; }
         private KuaiPan KuaiPan;
         private BaiduPan BaiduPan;
-        private BaiduPCSDiskUtility BaiduSdk;
+        
         private byte[] uploadTotalBuffer=null;
         private FileElement ToUploadFile;
 
@@ -63,6 +64,26 @@ namespace StarPan
             return sourcePath.Substring(0, sourcePath.LastIndexOf('/')) + "/";
         }
         #endregion
+
+
+        #region 定义网盘写策略
+        private static ICloudDiskAccessUtility GetUtiltiy_ByRandom(IEnumerable<ICloudDiskAccessUtility> list)
+        {
+            Random rd = new Random();
+            int i = rd.Next(0, 3);
+            
+            int count = 0;
+            foreach (var f in list)
+            {
+                if (i == count) return f;
+                count++;
+            }
+
+
+            return list.LastOrDefault();
+        }
+        #endregion
+
 
         #region 获取目录下文件列表信息
 

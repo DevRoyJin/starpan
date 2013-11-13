@@ -5,10 +5,11 @@ using System.Text;
 using KuaiPanSDK;
 using System.Net;
 using System.IO;
+using DiskAPIBase;
 
 namespace StarPan
 {
-    class KuaiPan : IDiskUtility
+    class KuaiPan : ICloudDiskAccessUtility
     {
         public KuaiPanSDK.KuaiPan sdk;
         public byte[] readFileBuff = null;
@@ -176,5 +177,20 @@ namespace StarPan
 
 
 
+
+        #region ICloudDiskAccessUtility Members
+
+
+        public IList<DiskAPIBase.File.CloudFileInfo> GetFileList(string dirPath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DiskAPIBase.File.CloudFileInfo GetFileInfo(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }
