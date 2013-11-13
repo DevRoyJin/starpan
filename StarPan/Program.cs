@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
 using Dokan;
+using DiskAPIBase;
 using System.Net;
 
 
@@ -11,10 +12,15 @@ namespace StarPan
 {
     class Program
     {
+        private static ICloudDiskAccessUtility GetUtiltiy(IEnumerable<ICloudDiskAccessUtility> list)
+        {
+            return list.OrderBy(li => li.GetFreeSpace()).LastOrDefault();
+        }
+
         private static void Main(string[] args)
         {
             //get disk utility by some strategy
-            //var utility = CloudDiskManager.Instance.GetClouDisk(list => list.FirstOrDefault());
+            //var utility = CloudDiskManager.Instance.GetClouDisk(GetUtiltiy);
             //Console.WriteLine("Get Utility {0}", utility.GetType());
 
 

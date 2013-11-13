@@ -72,7 +72,7 @@ namespace DiskAPIBase
         /// 获取某一文件/目录信息
         /// </summary>
         /// <param name="path">文件或目录路径</param>
-        /// <returns></returns>
+        /// <returns>文件或目录信息</returns>
         CloudFileInfo GetFileInfo(string path);
 
 
