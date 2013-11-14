@@ -486,52 +486,121 @@ namespace StarPan
         {
             bool result=true;
             FileElement fromPathFile=null;
-            FileElement toPathFile = null ;
+            FileElement toPathFile = new FileElement() ;
 
             foreach (FileElement file in AllFiles) //find file info from List
             {
                 if (file.parentPath + file.name == fromPath) //path could be found in List
                 {
+
                     fromPathFile = file;
-                    toPathFile = file;
-                    if (file.origin == 0) //from Baidu pan
-                    {
-                        result = BaiduPan.MoveFile(fromPath, toPath);
-                        
-                    }
-                    if (file.origin == 1) //from KuaiPan
-                    {
-                        result = KuaiPan.MoveFile(fromPath, toPath);
-
-                    }
-
-                    if (file.origin == 2)
-                    {   
-                        //OSS改名，需要判断是目录改名还是文件改名，目录改名，参数在最后需要加上"/"符号，文件则不需要
-                        if(file.isdir==System.IO.FileAttributes.Directory)
-                        result = AliyunOssUtility.Instance.MoveFile(fromPath.Substring(fromPath.IndexOf("/") + 1)+"/", toPath.Substring(toPath.IndexOf("/") + 1)+"/");
-                        else result = AliyunOssUtility.Instance.MoveFile(fromPath.Substring(fromPath.IndexOf("/") + 1), toPath.Substring(toPath.IndexOf("/") + 1));
-                    }
-                    if (result)
-                    {
-                        toPathFile.name = GetFileName(toPath);
-                        toPathFile.parentPath = GetPathPart(toPath);
-                        toPathFile.motifyTime = DateTime.Now;
-                        toPathFile.createTime = DateTime.Now;
-                        toPathFile.accessTime = DateTime.Now;
-                        toPathFile.origin = file.origin;
-                        toPathFile.size = file.size;
-                        toPathFile.isdir = file.isdir;
-
-                    }
-                    else
-                    {
-                        return false;
-                    }
-
 
                 }
+                if (file.parentPath + file.name == toPath.Substring(0,toPath.LastIndexOf("/")))
+                {
+                    //查询目标文件的所在目录所在的网盘
+                    toPathFile.origin=file.origin;
+                }
             }
+
+
+            if (fromPathFile.origin == toPathFile.origin || GetPathPart(fromPath)==GetPathPart(toPath))
+            {
+                //如果被Move的文件源与目标都属于同一个云存储
+                if (fromPathFile.origin == 0) //from Baidu pan
+                {
+                    result = BaiduPan.MoveFile(fromPath, toPath);
+
+                }
+                if (fromPathFile.origin == 1) //from KuaiPan
+                {
+                    result = KuaiPan.MoveFile(fromPath, toPath);
+
+                }
+
+                if (fromPathFile.origin == 2)
+                {
+                    //OSS改名，需要判断是目录改名还是文件改名，目录改名，参数在最后需要加上"/"符号，文件则不需要
+                    if (fromPathFile.isdir == System.IO.FileAttributes.Directory)
+                        result = AliyunOssUtility.Instance.MoveFile(fromPath.Substring(fromPath.IndexOf("/") + 1) + "/", toPath.Substring(toPath.IndexOf("/") + 1) + "/");
+                    else result = AliyunOssUtility.Instance.MoveFile(fromPath.Substring(fromPath.IndexOf("/") + 1), toPath.Substring(toPath.IndexOf("/") + 1));
+                }
+                if (result)
+                {
+                    toPathFile.name = GetFileName(toPath);
+                    toPathFile.parentPath = GetPathPart(toPath);
+                    toPathFile.motifyTime = DateTime.Now;
+                    toPathFile.createTime = DateTime.Now;
+                    toPathFile.accessTime = DateTime.Now;
+                    toPathFile.origin = fromPathFile.origin;
+                    toPathFile.size = fromPathFile.size;
+                    toPathFile.isdir = fromPathFile.isdir;
+
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                //如果源与目标不在同一网盘内，则需要从一个网盘读取数据，上传至另一网盘，最后将源文件从网盘中删除
+                byte[] fileData = null;
+                switch (fromPathFile.origin)
+                {
+                    case 0:
+                        BaiduPan.DownloadFile(fromPath, out fileData);
+                        break;
+                    case 1:
+                        KuaiPan.DownloadFile(fromPath, out fileData);
+                        break;
+                    case 2:
+                        AliyunOssUtility.Instance.DownloadFile(fromPath.Substring(fromPath.IndexOf("/") + 1), out fileData);
+                        break;
+                    default:
+                        break;
+                }
+                if (fileData != null)
+                {
+                    switch (toPathFile.origin)
+                    {
+                        case 0:
+                            result = BaiduPan.UploadFile(toPath, fileData);
+                            if (result) removeFile(fromPath);
+                            break;
+                        case 1:
+                            result = KuaiPan.UploadFile(toPath, fileData);
+                            if (result) removeFile(fromPath);
+                            break;
+                        case 2:
+                            result = AliyunOssUtility.Instance.UploadFile(toPath.Substring(toPath.IndexOf("/") + 1), fileData);
+                            if (result) removeFile(fromPath);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                else return false;
+
+                if (result)
+                {
+                    toPathFile.name = GetFileName(toPath);
+                    toPathFile.parentPath = GetPathPart(toPath);
+                    toPathFile.motifyTime = DateTime.Now;
+                    toPathFile.createTime = DateTime.Now;
+                    toPathFile.accessTime = DateTime.Now;
+                    //toPathFile.origin = toPathFile.origin;
+                    toPathFile.size = fromPathFile.size;
+                    toPathFile.isdir = fromPathFile.isdir;
+
+                }
+                else
+                {
+                    return false;
+                }
+
+            }
+
             AllFiles.Remove(fromPathFile);
             AllFiles.Add(toPathFile);
 
