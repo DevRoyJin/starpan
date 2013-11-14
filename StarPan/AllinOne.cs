@@ -485,15 +485,15 @@ namespace StarPan
         public bool MoveFile(string fromPath, string toPath)
         {
             bool result=true;
-            FileElement fileToBeMoved=null;
-            FileElement newFile = null ;
+            FileElement fromPathFile=null;
+            FileElement toPathFile = null ;
 
             foreach (FileElement file in AllFiles) //find file info from List
             {
                 if (file.parentPath + file.name == fromPath) //path could be found in List
                 {
-                    fileToBeMoved = file;
-                    newFile = file;
+                    fromPathFile = file;
+                    toPathFile = file;
                     if (file.origin == 0) //from Baidu pan
                     {
                         result = BaiduPan.MoveFile(fromPath, toPath);
@@ -511,14 +511,14 @@ namespace StarPan
                     }
                     if (result)
                     {
-                        newFile.name = GetFileName(toPath);
-                        newFile.parentPath = GetPathPart(toPath);
-                        newFile.motifyTime = DateTime.Now;
-                        newFile.createTime = DateTime.Now;
-                        newFile.accessTime = DateTime.Now;
-                        newFile.origin = file.origin;
-                        newFile.size = file.size;
-                        newFile.isdir = file.isdir;
+                        toPathFile.name = GetFileName(toPath);
+                        toPathFile.parentPath = GetPathPart(toPath);
+                        toPathFile.motifyTime = DateTime.Now;
+                        toPathFile.createTime = DateTime.Now;
+                        toPathFile.accessTime = DateTime.Now;
+                        toPathFile.origin = file.origin;
+                        toPathFile.size = file.size;
+                        toPathFile.isdir = file.isdir;
 
                     }
                     else
@@ -529,8 +529,8 @@ namespace StarPan
 
                 }
             }
-            AllFiles.Remove(fileToBeMoved);
-            AllFiles.Add(newFile);
+            AllFiles.Remove(fromPathFile);
+            AllFiles.Add(toPathFile);
 
             
 
