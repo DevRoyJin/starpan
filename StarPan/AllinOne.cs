@@ -388,7 +388,11 @@ namespace StarPan
                     }
                     else if (file.origin == 2)
                     {
-                        result = AliyunOssUtility.Instance.DeleteFile(path.Substring(path.IndexOf("/") + 1));
+                        if(file.isdir==System.IO.FileAttributes.Directory)
+                        result = AliyunOssUtility.Instance.DeleteFile(path.Substring(path.IndexOf("/") + 1)+"/");
+                        else
+                            result = AliyunOssUtility.Instance.DeleteFile(path.Substring(path.IndexOf("/") + 1));
+
                     }
                     fileTobeRemoved = file;
                 }
