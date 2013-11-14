@@ -389,6 +389,40 @@ namespace BaiduCloudSDK
             }
             return null;
         }
+
+        public bool Move(string oldPath, string newPath)
+        {
+            try
+            {
+                var ret = MoveInternal(oldPath,newPath);
+                Console.WriteLine("Move file from {0} to {1} succeeded-->" + ret, oldPath,newPath);
+                return true;
+            }
+            catch (WebException we)
+            {
+                var msg = "";
+                var res = we.Response as HttpWebResponse;
+                if (res != null)
+                {
+                    var sRes = HttpWebResponseUtility.ConvertReponseToString(res);
+                    var jsRes = (JObject)JsonConvert.DeserializeObject(sRes);
+                    if (jsRes != null && jsRes["error_msg"] != null)
+                    {
+                        msg = "Move file from {0} to {1} failed:" + jsRes["error_msg"].ToString();
+                    }
+                }
+                if (string.IsNullOrEmpty(msg))
+                {
+                    msg = "Move file from {0} to {1} failed:" + we.Message;
+                }
+                Console.WriteLine(msg, oldPath,newPath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+            return false;
+        }
         #endregion
 
         #region Private Methods
@@ -457,7 +491,11 @@ namespace BaiduCloudSDK
 
         private string DeleteDirectoryInternal(string pcsPath)
         {
-            return null;
+            var url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
+            url = string.Format(url, BaiduCloudCommand.GetFileInfoCommand, AccessToken, pcsPath);
+            var response = HttpWebResponseUtility.CreatePostHttpResponse(url,null,
+                HttpWebResponseUtility.DefaultRequestTimeout, null,Encoding.UTF8,null);
+            return HttpWebResponseUtility.ConvertReponseToString(response);
         }
 
         private string GetFileListInternal(string pcsPath)
@@ -477,7 +515,20 @@ namespace BaiduCloudSDK
                 HttpWebResponseUtility.DefaultRequestTimeout, null, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
         }
+
+        private string MoveInternal(string oldPath, string newPath)
+        {
+            var url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&from={2}&to={3}";
+            url = string.Format(url, BaiduCloudCommand.MoveCommand, AccessToken, oldPath, newPath);
+            var response = HttpWebResponseUtility.CreatePostHttpResponse(url, null,
+                HttpWebResponseUtility.DefaultRequestTimeout, null, Encoding.UTF8, null);
+            return HttpWebResponseUtility.ConvertReponseToString(response);
+        }
+
         #endregion
+
+
+
     }
 
 }
