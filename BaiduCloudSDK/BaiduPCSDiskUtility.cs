@@ -390,7 +390,7 @@ namespace BaiduCloudSDK
             return null;
         }
 
-        public bool Move(string oldPath, string newPath)
+        public bool MoveFile(string oldPath, string newPath)
         {
             try
             {

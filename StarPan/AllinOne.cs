@@ -506,8 +506,11 @@ namespace StarPan
                     }
 
                     if (file.origin == 2)
-                    {
-                        
+                    {   
+                        //OSS改名，需要判断是目录改名还是文件改名，目录改名，参数在最后需要加上"/"符号，文件则不需要
+                        if(file.isdir==System.IO.FileAttributes.Directory)
+                        result = AliyunOssUtility.Instance.MoveFile(fromPath.Substring(fromPath.IndexOf("/") + 1)+"/", toPath.Substring(toPath.IndexOf("/") + 1)+"/");
+                        else result = AliyunOssUtility.Instance.MoveFile(fromPath.Substring(fromPath.IndexOf("/") + 1), toPath.Substring(toPath.IndexOf("/") + 1));
                     }
                     if (result)
                     {

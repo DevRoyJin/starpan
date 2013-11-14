@@ -282,7 +282,7 @@ namespace AliyunSDK
             return null;
         }
 
-        public bool Move(string path, string newPath)
+        public bool MoveFile(string path, string newPath)
         {         
             try
             {

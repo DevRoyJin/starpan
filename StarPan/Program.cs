@@ -24,7 +24,8 @@ namespace StarPan
             //var utility = CloudDiskManager.Instance.GetClouDisk(GetUtiltiy);
             //Console.WriteLine("Get Utility {0}", utility.GetType());
 
-
+            //AliyunOssUtility.Instance.MoveFile("New folder/","newfolder/");
+            //Console.ReadLine();
 
             DokanOptions opt = new DokanOptions();
             opt.MountPoint = "r:\\";
