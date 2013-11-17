@@ -14,14 +14,21 @@ namespace AliyunSDK
     public class AliyunOssUtility : ICloudDiskAccessUtility
     {
         private const string EndPoint = "http://oss.aliyuncs.com";
-        private const string AccessKey = "Y8HLBRjlRgKp5SXV";
-        private const string AccessSecret = "6nRLip0xiul2CZVsTDe36TYoqD09YT";
+        private readonly string _accessKey;
+        private readonly string _accessSecret;
         private const string BucketName = "localclouddisk";
 
         private readonly OssClient _ossClient;
 
-        public AliyunOssUtility()
+        public AliyunOssUtility():this("Y8HLBRjlRgKp5SXV", "6nRLip0xiul2CZVsTDe36TYoqD09YT")
         {
+        }
+
+        public AliyunOssUtility(string key,string secret)
+        {
+            _accessKey = key;
+            _accessSecret = secret;
+
             //代理
             if (WebUtiltiy.IsProxyEnable)
             {
@@ -46,12 +53,12 @@ namespace AliyunSDK
                 //clientConfig.ConnectionTimeout = HttpWebResponseUtility.DefaultRequestTimeout;
 
 
-                _ossClient = new OssClient(edUri, AccessKey, AccessSecret, clientConfig);
+                _ossClient = new OssClient(edUri, _accessKey, _accessSecret, clientConfig);
             }
             //非代理
             else
             {
-                _ossClient = new OssClient(EndPoint, AccessKey, AccessSecret);
+                _ossClient = new OssClient(EndPoint, _accessKey, _accessSecret);
 
             }
         }

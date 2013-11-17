@@ -8,6 +8,8 @@ namespace StarPan
     {
         static void Main(string[] args)
         {
+            var instantce = CloudDiskManager.Instance;
+            Console.ReadLine();
         }
     }
 }

@@ -20,13 +20,20 @@ namespace BaiduCloudSDK
         private const string PcsPath = @"/apps/sjtupan";
         private const long SingleFileLengthLimitation = 2147483648L;
         private const string DefaultUrl = "";
-        private const string AccessToken = "3.a0fdecf6c512ce56ff547b1fcbdc9750.2592000.1386781278.4195463253-248414";
+        private readonly string _accessToken;
         #endregion
 
         public BaiduPCSDiskUtility()
         {
-            
+            _accessToken="3.a0fdecf6c512ce56ff547b1fcbdc9750.2592000.1386781278.4195463253-248414";
         }
+
+        public BaiduPCSDiskUtility(string acessToken)
+        {
+            _accessToken = acessToken;
+        }
+
+
 
 
         private static BaiduPCSDiskUtility _utility;
@@ -430,7 +437,7 @@ namespace BaiduCloudSDK
         private string GetQuotaDataInternal()
         {
             string url = "https://pcs.baidu.com/rest/2.0/pcs/quota?method={0}&access_token={1}";
-            url = string.Format(url, BaiduCloudCommand.GetInfoCommand, AccessToken);
+            url = string.Format(url, BaiduCloudCommand.GetInfoCommand, _accessToken);
             var response = HttpWebResponseUtility.CreateGetHttpResponse(url, HttpWebResponseUtility.DefaultRequestTimeout, null, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
         }
@@ -443,7 +450,7 @@ namespace BaiduCloudSDK
                 "https://c.pcs.baidu.com/rest/2.0/pcs/file?method={0}&path={1}&access_token={2}";
             //string appPath = Path.GetDirectoryName(path) ?? "";
             //appPath = string.IsNullOrEmpty(appPath) ? appPath : appPath.Replace("\\", "/");
-            url = string.Format(url, BaiduCloudCommand.UploadCommand, Uri.EscapeDataString(path), AccessToken);
+            url = string.Format(url, BaiduCloudCommand.UploadCommand, Uri.EscapeDataString(path), _accessToken);
             string contentType = "multipart/form-data; boundary=" + boundary + "\r\n";
             var response = HttpWebResponseUtility.CreatePostHttpResponse(url, contentType, HttpWebResponseUtility.ConstructFileUploadPostData(Path.GetFileName(path),fileData,path,boundary), HttpWebResponseUtility.DefaultRequestTimeout, null, Encoding.UTF8, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
@@ -453,7 +460,7 @@ namespace BaiduCloudSDK
         private byte[] DownloadFieInternal(string pcsPath)
         {
             string url = "https://d.pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
-            url = string.Format(url, BaiduCloudCommand.DownloadCommand, AccessToken, Uri.EscapeDataString(pcsPath));
+            url = string.Format(url, BaiduCloudCommand.DownloadCommand, _accessToken, Uri.EscapeDataString(pcsPath));
             var response = HttpWebResponseUtility.CreateGetHttpResponse(url, HttpWebResponseUtility.DefaultRequestTimeout, "", null);
 
             byte[] ret = null;
@@ -480,7 +487,7 @@ namespace BaiduCloudSDK
         private string CreateDirectoryInternal(string pcsPath)
         {
             var url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}";
-            url = string.Format(url, BaiduCloudCommand.MakeDirCommand, AccessToken);
+            url = string.Format(url, BaiduCloudCommand.MakeDirCommand, _accessToken);
             var formData = new Dictionary<string, string>();
             formData.Add("path",Uri.EscapeDataString(pcsPath));
             var response = HttpWebResponseUtility.CreatePostHttpResponse(url, formData, HttpWebResponseUtility.DefaultRequestTimeout, null,
@@ -492,7 +499,7 @@ namespace BaiduCloudSDK
         private string DeleteDirectoryInternal(string pcsPath)
         {
             var url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
-            url = string.Format(url, BaiduCloudCommand.GetFileInfoCommand, AccessToken, pcsPath);
+            url = string.Format(url, BaiduCloudCommand.GetFileInfoCommand, _accessToken, pcsPath);
             var response = HttpWebResponseUtility.CreatePostHttpResponse(url,null,
                 HttpWebResponseUtility.DefaultRequestTimeout, null,Encoding.UTF8,null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
@@ -501,7 +508,7 @@ namespace BaiduCloudSDK
         private string GetFileListInternal(string pcsPath)
         {
             var url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
-            url = string.Format(url,BaiduCloudCommand.GetFileListCommand , AccessToken,pcsPath);
+            url = string.Format(url,BaiduCloudCommand.GetFileListCommand , _accessToken,pcsPath);
             var response = HttpWebResponseUtility.CreateGetHttpResponse(url,
                 HttpWebResponseUtility.DefaultRequestTimeout, null, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
@@ -510,7 +517,7 @@ namespace BaiduCloudSDK
         private string GetFileInfoInternal(string pcsPath)
         {
             var url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
-            url = string.Format(url, BaiduCloudCommand.GetFileInfoCommand, AccessToken, pcsPath);
+            url = string.Format(url, BaiduCloudCommand.GetFileInfoCommand, _accessToken, pcsPath);
             var response = HttpWebResponseUtility.CreateGetHttpResponse(url,
                 HttpWebResponseUtility.DefaultRequestTimeout, null, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
@@ -519,7 +526,7 @@ namespace BaiduCloudSDK
         private string MoveInternal(string oldPath, string newPath)
         {
             var url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&from={2}&to={3}";
-            url = string.Format(url, BaiduCloudCommand.MoveCommand, AccessToken, oldPath, newPath);
+            url = string.Format(url, BaiduCloudCommand.MoveCommand, _accessToken, oldPath, newPath);
             var response = HttpWebResponseUtility.CreatePostHttpResponse(url, null,
                 HttpWebResponseUtility.DefaultRequestTimeout, null, Encoding.UTF8, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
