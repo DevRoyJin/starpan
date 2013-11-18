@@ -14,7 +14,8 @@ namespace KuaiPanSDK
 
         #region 私有方法
         private readonly KuaiPanSDK.KuaiPan _sdk;
-
+        private readonly string _name;
+        private readonly string _root;
 
         public KuaiPanUtility()
         {
@@ -22,8 +23,10 @@ namespace KuaiPanSDK
 
         }
 
-        public KuaiPanUtility(string consumerKey, string consumerSecret, string token, string tokenSecret)
+        public KuaiPanUtility(string name, string root, string consumerKey, string consumerSecret, string token, string tokenSecret)
         {
+            _name = name;
+            _root = root;
             _sdk = new KuaiPanSDK.KuaiPan(consumerKey, consumerSecret, token, tokenSecret);
         }
 
@@ -48,6 +51,16 @@ namespace KuaiPanSDK
         #endregion
 
         #region ICloudDiskAccessUtility Members
+        public string Name
+        {
+            get { return _name; }
+        }
+
+        public string Root
+        {
+            get { return _root; }
+        }
+
 
         public long GetQuota()
         {
@@ -66,6 +79,7 @@ namespace KuaiPanSDK
 
         public bool UploadFile(string path, byte[] fileData)
         {
+            path = PathHelper.CombineWebPath(_root, path);
             var result = _sdk.UpLoadFile(path, true, GetFileName(path), fileData);
             if (result != null)
             {
@@ -78,6 +92,7 @@ namespace KuaiPanSDK
         {
             try
             {
+                path = PathHelper.CombineWebPath(_root, path);
 
                 string downloadPath = _sdk.Download(path);
 
@@ -141,22 +156,26 @@ namespace KuaiPanSDK
 
         public bool CreateDirectory(string path)
         {
+            path = PathHelper.CombineWebPath(_root, path);
             if (_sdk.Create(path) != null) return true;
             return false;
         }
 
         public bool DeleteDirectory(string path)
         {
+            path = PathHelper.CombineWebPath(_root, path);
             return _sdk.Delete(path) == null ? false : true;
         }
 
         public bool DeleteFile(string filePath)
         {
+            filePath = PathHelper.CombineWebPath(_root, filePath);
             return _sdk.Delete(filePath) == null ? false : true;
         }
 
         public IList<DiskAPIBase.File.CloudFileInfo> GetFileList(string dirPath)
         {
+            dirPath = PathHelper.CombineWebPath(_root, dirPath);
             KuaiPanSDK.Model.MetaData FilesLists = _sdk.GetMetaData(dirPath, null);
             List<DiskAPIBase.File.CloudFileInfo> AllFiles = null;
             foreach (var f in FilesLists.Files)
@@ -184,6 +203,7 @@ namespace KuaiPanSDK
 
         public DiskAPIBase.File.CloudFileInfo GetFileInfo(string path)
         {
+            path = PathHelper.CombineWebPath(_root, path);
             KuaiPanSDK.Model.MetaData fileData = _sdk.GetMetaData(path, null);
             DiskAPIBase.File.CloudFileInfo file = new DiskAPIBase.File.CloudFileInfo();
             file.Path = path + "/" + fileData.Name;
@@ -204,6 +224,7 @@ namespace KuaiPanSDK
 
         public bool Move(string path, string newName)
         {
+            path = PathHelper.CombineWebPath(_root, path);
             if (_sdk.Move(path, newName) != null) return true;
             return false;
         }

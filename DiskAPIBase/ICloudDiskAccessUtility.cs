@@ -1,11 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using DiskAPIBase.File;
 
 namespace DiskAPIBase
 {
     public interface ICloudDiskAccessUtility
     {   
+        /// <summary>
+        /// 网盘实例名
+        /// </summary>
+        string Name { get;  }
+
+        /// <summary>
+        /// 网盘根目录
+        /// </summary>
+        string Root { get;  }
+
         /// <summary>
         /// 获取网盘配额
         /// </summary>

@@ -109,6 +109,7 @@ namespace StarPan.Configuration
 
         }
 
+        [ConfigurationProperty("root")]
         public string Root
         {
             get

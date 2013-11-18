@@ -21,15 +21,22 @@ namespace BaiduCloudSDK
         private const long SingleFileLengthLimitation = 2147483648L;
         private const string DefaultUrl = "";
         private readonly string _accessToken;
+        private readonly string _name;
+        private readonly string _root;
+
         #endregion
 
         public BaiduPCSDiskUtility()
         {
+            _name = "baidu";
+            _root = "/apps/测试应用";
             _accessToken="3.a0fdecf6c512ce56ff547b1fcbdc9750.2592000.1386781278.4195463253-248414";
         }
 
-        public BaiduPCSDiskUtility(string acessToken)
+        public BaiduPCSDiskUtility(string name, string root, string acessToken)
         {
+            _name = name;
+            _root = root;
             _accessToken = acessToken;
         }
 
@@ -52,6 +59,18 @@ namespace BaiduCloudSDK
         }
 
         #region IDiskUtility Members
+        public string Name
+        {
+            get { return _name; }
+        }
+
+        public string Root
+        {
+            get { return _root; }
+        }
+
+
+
         public long GetQuota()
         {
             var quotaJson = GetQuotaDataInternal();
@@ -110,6 +129,7 @@ namespace BaiduCloudSDK
         {
             try
             {
+                path = PathHelper.CombineWebPath(_root, path);
                 if (fileData.Length > GetFreeSpace())
                 {
                     throw new InvalidOperationException("No enough space.");
@@ -168,6 +188,7 @@ namespace BaiduCloudSDK
         {
             try
             {
+                pcsPath = PathHelper.CombineWebPath(_root, pcsPath);
                 filebuffer = DownloadFieInternal(pcsPath);
                 return true;
             }
@@ -204,9 +225,10 @@ namespace BaiduCloudSDK
 
         public bool CreateDirectory(string pcsPath)
         {
-            pcsPath = PcsPath+ pcsPath;
+            
             try
             {
+               pcsPath = PathHelper.CombineWebPath(_root, pcsPath);
                var ret = CreateDirectoryInternal(pcsPath);
                Console.WriteLine("Make dir succeeds-->"+ret);
                 return true;
@@ -242,6 +264,7 @@ namespace BaiduCloudSDK
         {
             try
             {
+                pcsPath = PathHelper.CombineWebPath(_root, pcsPath);
                 var ret = DeleteDirectoryInternal(pcsPath);
                 Console.WriteLine("Delete directory {0} succeeded-->" + ret,pcsPath);
                 return true;
@@ -276,6 +299,7 @@ namespace BaiduCloudSDK
         {
             try
             {
+                pcsPath = PathHelper.CombineWebPath(_root, pcsPath);
                 var ret = DeleteDirectoryInternal(pcsPath);
                 Console.WriteLine("Delete file {0} succeeded-->" + ret,pcsPath);
                 return true;
@@ -310,13 +334,14 @@ namespace BaiduCloudSDK
         {
             try
             {
+                dirPath = PathHelper.CombineWebPath(_root, dirPath);
                 var ret = GetFileListInternal(dirPath);
                 var responseJo = 
                     (JObject)JsonConvert.DeserializeObject(ret);
                 var sFileList = JsonConvert.DeserializeObject <List<JObject>>(responseJo["list"].ToString());
                 var fileList = sFileList.Select(jo => new CloudFileInfo
                 {
-                    Path = jo["path"].ToString(),
+                    Path = jo["path"].ToString().Substring(_root.Length-1),
                     CreateTime = jo["ctime"].ToObject<long>(),
                     ModifiyTime =jo["mtime"].ToObject<long>(),
                     Size =jo["size"].ToObject<long>(),
@@ -356,6 +381,7 @@ namespace BaiduCloudSDK
         {
             try
             {
+                path = PathHelper.CombineWebPath(_root, path);
                 var ret = GetFileInfoInternal(path);
                 var responseJo =
                     (JObject)JsonConvert.DeserializeObject(ret);
@@ -363,7 +389,7 @@ namespace BaiduCloudSDK
                 var jo = sFileList[0];
                 return new CloudFileInfo
                 {
-                    Path = jo["path"].ToString(),
+                    Path = jo["path"].ToString().Substring(_root.Length - 1),
                     CreateTime = jo["ctime"].ToObject<long>(),
                     ModifiyTime = jo["mtime"].ToObject<long>(),
                     Size = jo["size"].ToObject<long>(),
@@ -401,6 +427,8 @@ namespace BaiduCloudSDK
         {
             try
             {
+                oldPath = PathHelper.CombineWebPath(_root, oldPath);
+                newPath = PathHelper.CombineWebPath(_root, newPath);
                 var ret = MoveInternal(oldPath,newPath);
                 Console.WriteLine("Move file from {0} to {1} succeeded-->" + ret, oldPath,newPath);
                 return true;
