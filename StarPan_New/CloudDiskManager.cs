@@ -42,6 +42,7 @@ namespace StarPan
                 {
                     args = new[]
                     {
+                        diskConfig.Root,diskConfig.Name,
                         diskConfig.ConsumerKey,
                         diskConfig.ConsumerSecret,
                         diskConfig.Token,
@@ -51,13 +52,13 @@ namespace StarPan
                 else if (!string.IsNullOrEmpty(diskConfig.AccessKey) &&
                          !string.IsNullOrEmpty(diskConfig.AccessSerect))
                 {
-                    args = new[] {diskConfig.AccessKey, diskConfig.AccessSerect};
+                    args = new[] { diskConfig.Root, diskConfig.Name, diskConfig.AccessKey, diskConfig.AccessSerect };
                 }
 
                 else if (!string.IsNullOrEmpty(diskConfig.AccessToken))
                 {
 
-                    args = new[] {diskConfig.AccessToken};
+                    args = new[] {diskConfig.Root, diskConfig.Name, diskConfig.AccessToken};
                 }
                 else
                 {
