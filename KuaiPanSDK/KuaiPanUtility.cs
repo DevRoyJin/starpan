@@ -13,13 +13,18 @@ namespace KuaiPanSDK
     {
 
         #region 私有方法
-        public KuaiPanSDK.KuaiPan sdk;
+        private readonly KuaiPanSDK.KuaiPan _sdk;
 
 
         public KuaiPanUtility()
         {
-            sdk = new KuaiPanSDK.KuaiPan("xcRYiOnHwra5Lb5o", "l5sS04iA862dm00u", "0059a7586c815f96a1f8aedd", "b5ffa76e063b4ff58e41e7843feab2ed");
+            _sdk = new KuaiPanSDK.KuaiPan("xcRYiOnHwra5Lb5o", "l5sS04iA862dm00u", "0059a7586c815f96a1f8aedd", "b5ffa76e063b4ff58e41e7843feab2ed");
 
+        }
+
+        public KuaiPanUtility(string consumerKey, string consumerSecret, string token, string tokenSecret)
+        {
+            _sdk = new KuaiPanSDK.KuaiPan(consumerKey, consumerSecret, token, tokenSecret);
         }
 
         public string GetFileName(string sourcePath)
@@ -46,22 +51,22 @@ namespace KuaiPanSDK
 
         public long GetQuota()
         {
-            return sdk.GetAccountInfo().QuotaTotal;
+            return _sdk.GetAccountInfo().QuotaTotal;
         }
 
         public long GetUsedSpace()
         {
-            return sdk.GetAccountInfo().QuotaUsed;
+            return _sdk.GetAccountInfo().QuotaUsed;
         }
 
         public long GetFreeSpace()
         {
-            return sdk.GetAccountInfo().QuotaTotal - sdk.GetAccountInfo().QuotaUsed;
+            return _sdk.GetAccountInfo().QuotaTotal - _sdk.GetAccountInfo().QuotaUsed;
         }
 
         public bool UploadFile(string path, byte[] fileData)
         {
-            var result = sdk.UpLoadFile(path, true, GetFileName(path), fileData);
+            var result = _sdk.UpLoadFile(path, true, GetFileName(path), fileData);
             if (result != null)
             {
                 return true;
@@ -74,7 +79,7 @@ namespace KuaiPanSDK
             try
             {
 
-                string downloadPath = sdk.Download(path);
+                string downloadPath = _sdk.Download(path);
 
                 //WebClient wc = new WebClient();
                 //string myCookie = @"token=0059a75882e3435a92343bd59c42802c-342602031; logindate=2013-10-30; ksc_suv=2025338563.1383101596179; relogintoken=0059a758633140bf84e328f16e342846-41119f36bbd44177872ead5a199bf55a-5875544; _et=0338322ea3d0101d517f62fc9fe13568910cac8668c473c16094f3ad61484ccbd28579e49c44241265f9; _ga=GA1.2.194446616.1376518040; _fs=b9e71c18; kphelper-inst=1; __cdl_snk=daa50229ca76ec07998e52a105b6ca7a";
@@ -136,23 +141,23 @@ namespace KuaiPanSDK
 
         public bool CreateDirectory(string path)
         {
-            if (sdk.Create(path) != null) return true;
+            if (_sdk.Create(path) != null) return true;
             return false;
         }
 
         public bool DeleteDirectory(string path)
         {
-            return sdk.Delete(path) == null ? false : true;
+            return _sdk.Delete(path) == null ? false : true;
         }
 
         public bool DeleteFile(string filePath)
         {
-            return sdk.Delete(filePath) == null ? false : true;
+            return _sdk.Delete(filePath) == null ? false : true;
         }
 
         public IList<DiskAPIBase.File.CloudFileInfo> GetFileList(string dirPath)
         {
-            KuaiPanSDK.Model.MetaData FilesLists = sdk.GetMetaData(dirPath, null);
+            KuaiPanSDK.Model.MetaData FilesLists = _sdk.GetMetaData(dirPath, null);
             List<DiskAPIBase.File.CloudFileInfo> AllFiles = null;
             foreach (var f in FilesLists.Files)
             {
@@ -179,7 +184,7 @@ namespace KuaiPanSDK
 
         public DiskAPIBase.File.CloudFileInfo GetFileInfo(string path)
         {
-            KuaiPanSDK.Model.MetaData fileData = sdk.GetMetaData(path, null);
+            KuaiPanSDK.Model.MetaData fileData = _sdk.GetMetaData(path, null);
             DiskAPIBase.File.CloudFileInfo file = new DiskAPIBase.File.CloudFileInfo();
             file.Path = path + "/" + fileData.Name;
             file.CreateTime = fileData.Createtime.Ticks;
@@ -199,7 +204,7 @@ namespace KuaiPanSDK
 
         public bool Move(string path, string newName)
         {
-            if (sdk.Move(path, newName) != null) return true;
+            if (_sdk.Move(path, newName) != null) return true;
             return false;
         }
 

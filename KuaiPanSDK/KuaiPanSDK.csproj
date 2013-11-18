@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HttpHelper.cs" />
+    <Compile Include="KuaiPanUtility.cs" />
     <Compile Include="Model\MetaData.cs" />
     <Compile Include="Model\FileData.cs" />
     <Compile Include="Model\Shares.cs" />
@@ -62,7 +63,17 @@
     <Compile Include="SDKEnum.cs" />
     <Compile Include="StatusCodeMsg.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DiskAPIBase\DiskAPIBase.csproj">
+      <Project>{EACDFD73-4538-4F15-B2EC-61BC21D02A2C}</Project>
+      <Name>DiskAPIBase</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy /y /c  $(ProjectDir)$(OutDir)*.dll $(SolutionDir)Starpan\bin\$(ConfigurationName)
+xcopy /y /c  $(ProjectDir)$(OutDir)*.dll $(SolutionDir)Starpan_new\bin\$(ConfigurationName)</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

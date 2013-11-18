@@ -14,9 +14,9 @@ namespace StarPan.Configuration
         }
 
         [ConfigurationProperty("cloudDiskGroup", IsDefaultCollection = true, Options = ConfigurationPropertyOptions.None)]
-        public CloudDiskInstanceCollection CloudDiskGroup
+        public CloudDiskConfigurationCollection CloudDiskGroup
         {
-            get { return (CloudDiskInstanceCollection)base["cloudDiskGroup"]; }
+            get { return (CloudDiskConfigurationCollection)base["cloudDiskGroup"]; }
         }
     }
 }

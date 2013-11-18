@@ -18,7 +18,7 @@ namespace StarPan
         {
             get
             {
-                return CloudDiskManager.Instance.GetClouDisk(list => list.FirstOrDefault());
+                return CloudDiskManager.Instance.GetCloudDisk(list => list.FirstOrDefault());
 
             }
         }

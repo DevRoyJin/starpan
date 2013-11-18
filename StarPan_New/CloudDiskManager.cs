@@ -25,25 +25,52 @@ namespace StarPan
 
             foreach (var item in section.CloudDiskGroup)
             {
-                var cloudDiskInstance = item as CloudDiskInstance;
-                if (cloudDiskInstance == null)
+                var diskConfig = item as CloudDiskConfiguration;
+                if (diskConfig == null)
                 {
                     Console.WriteLine("Error: Read cloud disk configuration failed.");
                     continue;
                 }
-                var dll = cloudDiskInstance.DllName;
-                var cn = cloudDiskInstance.ClassName;
-                var accessToken = cloudDiskInstance.AccessToken;
-                var accessKey = cloudDiskInstance.AccessKey;
-                var accessSerect = cloudDiskInstance.AccessSerect;
-                var args = !string.IsNullOrEmpty(accessToken)
-                    ? new [] {accessToken}
-                    : new[] {accessKey, accessSerect};
+                var dll = diskConfig.DllName;
+                var cn = diskConfig.ClassName;
+                object[] args = null;
 
-                var utility = Assembly.LoadFrom(dll).CreateInstance(cn,false,BindingFlags.CreateInstance,null,args,null,null) as ICloudDiskAccessUtility;
+                if (!string.IsNullOrEmpty(diskConfig.ConsumerKey) &&
+                    !string.IsNullOrEmpty(diskConfig.ConsumerSecret) &&
+                    !string.IsNullOrEmpty(diskConfig.Token) &&
+                    !string.IsNullOrEmpty(diskConfig.TokenSecret))
+                {
+                    args = new[]
+                    {
+                        diskConfig.ConsumerKey,
+                        diskConfig.ConsumerSecret,
+                        diskConfig.Token,
+                        diskConfig.TokenSecret,
+                    };
+                }
+                else if (!string.IsNullOrEmpty(diskConfig.AccessKey) &&
+                         !string.IsNullOrEmpty(diskConfig.AccessSerect))
+                {
+                    args = new[] {diskConfig.AccessKey, diskConfig.AccessSerect};
+                }
+
+                else if (!string.IsNullOrEmpty(diskConfig.AccessToken))
+                {
+
+                    args = new[] {diskConfig.AccessToken};
+                }
+                else
+                {
+                    throw new Exception(string.Format("Invalid cloudDiskConfiguration: name={0}", diskConfig.Name));
+                }
+
+                var utility =
+                    Assembly.LoadFrom(dll)
+                        .CreateInstance(cn, false, BindingFlags.CreateInstance, null, args, null, null) as
+                        ICloudDiskAccessUtility;
                 if (utility != null)
                 {
-                    _mCloudDisks.Add(cloudDiskInstance.Name,utility);
+                    _mCloudDisks.Add(diskConfig.Name, utility);
                 }
 
             }
@@ -83,5 +110,14 @@ namespace StarPan
         {
             return diskSelectingStrategy(_mCloudDisks.Values);
         }
+
+        public void PrintFreeSpace()
+        {
+            foreach (var kv in _mCloudDisks)
+            {
+                Console.WriteLine("Disk :{0}-->free space:{1}",kv.Key,kv.Value.GetFreeSpace());
+            }
+        }
+
     }
 }

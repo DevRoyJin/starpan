@@ -40,8 +40,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CloudDiskManager.cs" />
-    <Compile Include="Configuration\CloudDiskInstanceCollection.cs" />
-    <Compile Include="Configuration\CloudDisksConfigurations.cs" />
+    <Compile Include="Configuration\CloudDiskConfigurationCollection.cs" />
+    <Compile Include="Configuration\CloudDisksConfigurationSection.cs" />
     <Compile Include="FileElement.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
