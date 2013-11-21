@@ -25,7 +25,7 @@ namespace AliyunSDK
         {
         }
 
-        public AliyunOssUtility(string name, string root, string key, string secret)
+        public AliyunOssUtility(string root, string name, string key, string secret)
         {
             _name = name;
             _root = root;
@@ -234,10 +234,13 @@ namespace AliyunSDK
         {
             try
             {
+                dirPath = PathHelper.CombineWebPath(_root, dirPath);
                 var oList = _ossClient.ListObjects(BucketName, dirPath);
-                return oList.ObjectSummaries.Where(oos=>oos.Key!=dirPath).Select(oos => new CloudFileInfo
+                return oList.ObjectSummaries.Where(oos => oos.Key != dirPath &&
+                    (!oos.Key.Substring(dirPath.Length).Contains("/") || oos.Key.Substring(dirPath.Length).Split('/')[1] == ""))
+                    .Select(oos => new CloudFileInfo
                     {
-                        Path = oos.Key,
+                        Path = oos.Key.Substring(_root.Length),
                         CreateTime = oos.LastModified.Ticks,
                         ModifiyTime = oos.LastModified.Ticks,
                         IsDir = oos.Key.EndsWith("/"),
@@ -271,7 +274,7 @@ namespace AliyunSDK
                 {
                     return new CloudFileInfo()
                     {
-                        Path = objSummary.Key,
+                        Path = objSummary.Key.Substring(_root.Length),
                         CreateTime = objSummary.LastModified.Ticks,
                         ModifiyTime = objSummary.LastModified.Ticks,
                         IsDir = objSummary.Key.EndsWith("/"),

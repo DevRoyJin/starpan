@@ -34,12 +34,12 @@ namespace Dokan
 
     public class FileInformation
     {
-        public FileAttributes Attributes;
-        public DateTime CreationTime;
-        public DateTime LastAccessTime;
-        public DateTime LastWriteTime;
-        public long Length;
-        public string FileName;
+        public FileAttributes Attributes { get; set; }
+        public DateTime CreationTime { get; set; }
+        public DateTime LastAccessTime { get; set; }
+        public DateTime LastWriteTime { get; set; }
+        public long Length { get; set; }
+        public string FileName { get; set; }
         /*
         public FileInformation()
         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 using System.Reflection;
 using DiskAPIBase;
 using StarPan.Configuration;
@@ -111,6 +112,12 @@ namespace StarPan
         {
             return diskSelectingStrategy(_mCloudDisks.Values);
         }
+
+        public IList<ICloudDiskAccessUtility> GetAllCloudDisk()
+        {
+            return _mCloudDisks.Values.ToList();
+        }
+
 
         public void PrintFreeSpace()
         {

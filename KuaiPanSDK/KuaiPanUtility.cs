@@ -23,7 +23,7 @@ namespace KuaiPanSDK
 
         }
 
-        public KuaiPanUtility(string name, string root, string consumerKey, string consumerSecret, string token, string tokenSecret)
+        public KuaiPanUtility(string root, string name, string consumerKey, string consumerSecret, string token, string tokenSecret)
         {
             _name = name;
             _root = root;

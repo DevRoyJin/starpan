@@ -33,7 +33,7 @@ namespace BaiduCloudSDK
             _accessToken="3.a0fdecf6c512ce56ff547b1fcbdc9750.2592000.1386781278.4195463253-248414";
         }
 
-        public BaiduPCSDiskUtility(string name, string root, string acessToken)
+        public BaiduPCSDiskUtility(string root, string name, string acessToken)
         {
             _name = name;
             _root = root;
@@ -339,14 +339,18 @@ namespace BaiduCloudSDK
                 var responseJo = 
                     (JObject)JsonConvert.DeserializeObject(ret);
                 var sFileList = JsonConvert.DeserializeObject <List<JObject>>(responseJo["list"].ToString());
-                var fileList = sFileList.Select(jo => new CloudFileInfo
+                var fileList = sFileList.Select(jo =>
                 {
-                    Path = jo["path"].ToString().Substring(_root.Length-1),
-                    CreateTime = jo["ctime"].ToObject<long>(),
-                    ModifiyTime =jo["mtime"].ToObject<long>(),
-                    Size =jo["size"].ToObject<long>(),
-                    IsDir = jo["isdir"].ToObject<int>()==1
+                    var isDir = jo["isdir"].ToObject<int>() == 1;
+                    return new CloudFileInfo
+                    {
+                        Path = jo["path"].ToString().Substring(_root.Length) + (isDir ? "/" : ""),
+                        CreateTime = jo["ctime"].ToObject<long>(),
+                        ModifiyTime = jo["mtime"].ToObject<long>(),
+                        Size = jo["size"].ToObject<long>(),
+                        IsDir = isDir
 
+                    };
                 }).ToList();
 
                 return fileList;
@@ -387,13 +391,14 @@ namespace BaiduCloudSDK
                     (JObject)JsonConvert.DeserializeObject(ret);
                 var sFileList = JsonConvert.DeserializeObject<List<JObject>>(responseJo["list"].ToString());
                 var jo = sFileList[0];
+                var isDir = jo["isdir"].ToObject<int>() == 1;
                 return new CloudFileInfo
                 {
-                    Path = jo["path"].ToString().Substring(_root.Length - 1),
+                    Path = jo["path"].ToString().Substring(_root.Length) + (isDir?"/":""),
                     CreateTime = jo["ctime"].ToObject<long>(),
                     ModifiyTime = jo["mtime"].ToObject<long>(),
                     Size = jo["size"].ToObject<long>(),
-                    IsDir = jo["isdir"].ToObject<int>() == 1
+                    IsDir = isDir
 
                 };
             }
