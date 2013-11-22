@@ -138,6 +138,20 @@ namespace StarPan.Configuration
             }
         }
 
+        [ConfigurationProperty("BucketName")]
+        public string BucketName
+        {
+            get
+            {
+                return (string)base["BucketName"];
+            }
+            set
+            {
+                base["BucketName"] = value;
+            }
+        }
+
+
         [ConfigurationProperty("accessSecret")]
         public string AccessSerect
         {

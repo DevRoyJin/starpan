@@ -51,9 +51,10 @@ namespace StarPan
                     };
                 }
                 else if (!string.IsNullOrEmpty(diskConfig.AccessKey) &&
-                         !string.IsNullOrEmpty(diskConfig.AccessSerect))
+                         !string.IsNullOrEmpty(diskConfig.AccessSerect)&&
+                         !string.IsNullOrEmpty(diskConfig.BucketName))
                 {
-                    args = new[] { diskConfig.Root, diskConfig.Name, diskConfig.AccessKey, diskConfig.AccessSerect };
+                    args = new[] { diskConfig.Root, diskConfig.Name, diskConfig.AccessKey, diskConfig.AccessSerect, diskConfig.BucketName };
                 }
 
                 else if (!string.IsNullOrEmpty(diskConfig.AccessToken))

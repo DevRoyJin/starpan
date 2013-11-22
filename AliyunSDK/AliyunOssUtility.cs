@@ -14,21 +14,22 @@ namespace AliyunSDK
     public class AliyunOssUtility : ICloudDiskAccessUtility
     {
         private const string EndPoint = "http://oss.aliyuncs.com";
-        private const string BucketName = "localclouddisk";
+        private string BucketName;
 
         private readonly string _name;
         private readonly string _root;
 
         private readonly OssClient _ossClient;
 
-        public AliyunOssUtility():this("aliyun","apps/","Y8HLBRjlRgKp5SXV", "6nRLip0xiul2CZVsTDe36TYoqD09YT")
+        public AliyunOssUtility():this("aliyun","apps/","Y8HLBRjlRgKp5SXV", "6nRLip0xiul2CZVsTDe36TYoqD09YT", "sjtupan")
         {
         }
 
-        public AliyunOssUtility(string root, string name, string key, string secret)
+        public AliyunOssUtility(string root, string name, string key, string secret, string bucketName)
         {
             _name = name;
             _root = root;
+            this.BucketName = bucketName;
             //代理
             if (WebUtiltiy.IsProxyEnable)
             {
