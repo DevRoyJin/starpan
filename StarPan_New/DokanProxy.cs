@@ -47,15 +47,15 @@ namespace StarPan
 
         private void GenerateNode(TreeNode<FileInformation> root, ICloudDiskAccessUtility utility)
         {
-            var fileList = utility.GetFileList(root.Data.FileName);
+            var fileList = utility.GetFileList(root.Data.FileName+"/");
             if (fileList == null)
             {
                 return;
             }
             var fileInfoList = fileList.Select(f => new FileInformation()
             {
-                FileName = f.Path,
-                Attributes = f.IsDir?FileAttributes.Directory:FileAttributes.Normal,
+                FileName = "/" + f.Path,
+                Attributes = f.IsDir ? FileAttributes.Directory : FileAttributes.Normal,
                 CreationTime = new DateTime(f.CreateTime),
                 LastAccessTime = new DateTime(f.ModifiyTime),
                 LastWriteTime = new DateTime(f.ModifiyTime),
@@ -68,7 +68,7 @@ namespace StarPan
                 {
                     node = root.AddChild(fileInfo);
                     _fileNodeList.Add(node);
-                    
+
                 }
                 else
                 {
@@ -84,7 +84,7 @@ namespace StarPan
 
         public void PrintFileCount()
         {
-            Console.WriteLine("Files count:{0}",_fileNodeList.Count);
+            Console.WriteLine("Files count:{0}", _fileNodeList.Count);
 
         }
 
@@ -102,7 +102,7 @@ namespace StarPan
         //        msg.Append(node.Data.FileName);
         //        Console.WriteLine(msg);
         //    }
-            
+
         //}
 
         public void PrintNode(TreeNode<FileInformation> node)
@@ -120,8 +120,33 @@ namespace StarPan
             {
                 PrintNode(treeNode);
             }
+        }
 
+        public IList<FileInformation> FindAllChildren(string dirPath){
+            Console.WriteLine("File all children {0}", dirPath);
+            PrintNode(_root);
+            var dirNode = _fileNodeList.FirstOrDefault(node=>node.Data.FileName==dirPath);
+            if(dirNode!=null)
+            {
+                return dirNode.GetChildrenData();
+
+            }
+            return null;
 
         }
+
+        public FileInformation GetFileInfo(string dirPath)
+        {
+            var dirNode = _fileNodeList.FirstOrDefault(node => node.Data.FileName == dirPath);
+            if (dirNode != null)
+            {
+                return dirNode.Data;
+
+            }
+            return null;
+
+        }
+
+        
     }
 }
