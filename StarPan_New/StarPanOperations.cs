@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using DiskAPIBase;
 using Dokan;
+using System.Collections.Generic;
 
 
 namespace StarPan
@@ -13,6 +14,7 @@ namespace StarPan
         private int Context = 0;
         private int count_;
         private string rootPath = "/apps/sjtupan/";
+        private DokanProxy proxy;
 
         private ICloudDiskAccessUtility CloudDiskAccessUtility
         {
@@ -33,6 +35,8 @@ namespace StarPan
         public StarPanOperations()
         {
             count_ = 1;
+            proxy = new DokanProxy();
+
         }
 
         public int Cleanup(string filename, DokanFileInfo info)
@@ -158,7 +162,24 @@ namespace StarPan
             string targetPath = filename.Replace("\\", "/");
             Console.WriteLine("Dokan FindFiles, file name is " + filename);
 
-            #region 通过AllinOne类中的List<FileElement>遍历查询目录下文件
+            //new mechanism through DokanProxy
+            var allfilesList = proxy.FindAllChildren(targetPath);
+            foreach (var f in allfilesList)
+            {
+                FileInformation file = new FileInformation();
+                file.Attributes = f.Attributes;
+                file.CreationTime = f.CreationTime;
+                file.FileName = GetFileName(f.FileName);
+                file.LastAccessTime = f.LastAccessTime;
+                file.LastWriteTime = f.LastWriteTime;
+                file.Length = f.Length;
+                                
+                files.Add(file);
+            }
+
+
+
+            #region 通过AllinOne类中的List<FileElement>遍历查询目录下文件 - 废弃
             //foreach (FileElement file in allinone.returnAllFiles())
             //{
             //    if (file.parentPath == targetPath || file.parentPath == targetPath + "/") //不清楚传入的filename后面是否带"/" - TBD
@@ -226,7 +247,21 @@ namespace StarPan
                 }
                 else
                 {
-                    #region 查找List<FileElement>中的对应文件信息
+
+                    FileInformation file = new FileInformation();
+                    var f = proxy.GetFileInfo(targetPath);
+                    file.Attributes = f.Attributes;
+                    file.CreationTime = f.CreationTime;
+                    file.FileName = GetFileName(f.FileName);
+                    file.LastAccessTime = f.LastAccessTime;
+                    file.LastWriteTime = f.LastWriteTime;
+                    file.Length = f.Length;
+                    
+                    
+                     fileinfo = file;
+                    
+
+                    #region 查找List<FileElement>中的对应文件信息 - 废弃
                     //FileElement file = allinone.searchFile(targetPath);
                     //if (file == null) return DokanNet.ERROR_FILE_NOT_FOUND;
                     //else
