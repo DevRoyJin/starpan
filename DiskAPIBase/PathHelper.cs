@@ -39,5 +39,17 @@ namespace DiskAPIBase
             var path = Path.Combine(path1, path2);
             return ConvertToWebPath(path);
         }
+
+        public static string GetParentDirectory(string path)
+        {
+            path = ConvertToLocalPath(path);
+            return ConvertToWebPath(Path.GetDirectoryName(path));
+        }
+
+        public static string GetFileName(string path)
+        {
+            path = ConvertToLocalPath(path);
+            return Path.GetFileName(path);
+        }
     }
 }

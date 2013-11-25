@@ -166,13 +166,7 @@ namespace StarPan
             var allfilesList = proxy.FindAllChildren(targetPath);
             foreach (var f in allfilesList)
             {
-                FileInformation file = new FileInformation();
-                file.Attributes = f.Attributes;
-                file.CreationTime = f.CreationTime;
-                file.FileName = GetFileName(f.FileName);
-                file.LastAccessTime = f.LastAccessTime;
-                file.LastWriteTime = f.LastWriteTime;
-                file.Length = f.Length;
+                FileInformation file = f.ToFileInformation();
                                 
                 files.Add(file);
             }
@@ -248,17 +242,8 @@ namespace StarPan
                 else
                 {
 
-                    FileInformation file = new FileInformation();
                     var f = proxy.GetFileInfo(targetPath);
-                    file.Attributes = f.Attributes;
-                    file.CreationTime = f.CreationTime;
-                    file.FileName = GetFileName(f.FileName);
-                    file.LastAccessTime = f.LastAccessTime;
-                    file.LastWriteTime = f.LastWriteTime;
-                    file.Length = f.Length;
-                    
-                    
-                     fileinfo = file;
+                     fileinfo = f.ToFileInformation();
                     
 
                     #region 查找List<FileElement>中的对应文件信息 - 废弃

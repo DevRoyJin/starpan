@@ -6,7 +6,7 @@ using System.Text;
 
 namespace StarPan.Structure
 {
-    public class TreeNode<T>
+    public class TreeNode<T> :ICloneable where T:ICloneable
     {
 
         private IList<TreeNode<T>> _children;
@@ -66,6 +66,13 @@ namespace StarPan.Structure
             return node;
         }
 
+        public TreeNode<T> AddChild(TreeNode<T> node)
+        {
+            this._children.Add(node);
+            node.Parent = this;
+            return node;
+        }
+
         public void RemoveChild(TreeNode<T> child)
         {
             child.Parent = null;
@@ -95,6 +102,18 @@ namespace StarPan.Structure
         {
             return _children.ToArray();
 
+        }
+
+        public object Clone()
+        {
+            var data = (T)this.Data.Clone();
+            var node = new TreeNode<T>(data);
+            foreach (var treeNode in _children)
+            {
+                node.AddChild((TreeNode<T>)treeNode.Clone());
+
+            }
+            return node;
         }
     }
 }
