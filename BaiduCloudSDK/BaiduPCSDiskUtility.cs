@@ -330,6 +330,14 @@ namespace BaiduCloudSDK
             return false;
         }
 
+        public DateTime getRightTime(long tmpTime)
+        {
+            DateTime dtStart = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
+            long ITime = tmpTime * 10000000;
+            TimeSpan toNow = new TimeSpan(ITime);
+            return dtStart.Add(toNow);
+        }
+
         public IList<DiskAPIBase.File.CloudFileInfo> GetFileList(string dirPath)
         {
             try
@@ -344,9 +352,11 @@ namespace BaiduCloudSDK
                     var isDir = jo["isdir"].ToObject<int>() == 1;
                     return new CloudFileInfo
                     {
-                        Path = jo["path"].ToString().Substring(_root.Length) + (isDir ? "/" : ""),
-                        CreateTime = jo["ctime"].ToObject<long>(),
-                        ModifiyTime = jo["mtime"].ToObject<long>(),
+                        //Path = jo["path"].ToString().Substring(_root.Length) + (isDir ? "/" : ""),
+                        //remove "/" at the end of directory path
+                        Path = jo["path"].ToString().Substring(_root.Length),
+                        CreateTime = getRightTime(jo["ctime"].ToObject<long>()).Ticks,
+                        ModifiyTime = getRightTime(jo["mtime"].ToObject<long>()).Ticks,
                         Size = jo["size"].ToObject<long>(),
                         IsDir = isDir
 

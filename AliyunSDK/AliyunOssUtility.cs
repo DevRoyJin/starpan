@@ -241,7 +241,9 @@ namespace AliyunSDK
                     (!oos.Key.Substring(dirPath.Length).Contains("/") || oos.Key.Substring(dirPath.Length).Split('/')[1] == ""))
                     .Select(oos => new CloudFileInfo
                     {
-                        Path = oos.Key.Substring(_root.Length),
+                        //Path = oos.Key.Substring(_root.Length),
+                        //remove "/" at the end of directory path
+                        Path = oos.Key.Substring(_root.Length, oos.Key.EndsWith("/") ? oos.Key.LastIndexOf("/") : oos.Key.Length),
                         CreateTime = oos.LastModified.Ticks,
                         ModifiyTime = oos.LastModified.Ticks,
                         IsDir = oos.Key.EndsWith("/"),
