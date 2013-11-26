@@ -138,16 +138,16 @@ namespace StarPan.Configuration
             }
         }
 
-        [ConfigurationProperty("BucketName")]
+        [ConfigurationProperty("bucketName")]
         public string BucketName
         {
             get
             {
-                return (string)base["BucketName"];
+                return (string)base["bucketName"];
             }
             set
             {
-                base["BucketName"] = value;
+                base["bucketName"] = value;
             }
         }
 

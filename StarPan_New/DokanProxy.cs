@@ -27,13 +27,11 @@ namespace StarPan
                     LastAccessTime = new DateTime(0),
                     LastWriteTime = new DateTime(0),
                     Size = 0,
-                    CurrentPath = "/",
-                    ParentPath = null,
                     Source = null
                 };
 
             _root = new TreeNode<PathNode>(rootInfo);
-            _fileNodeDictionay.Add(rootInfo.CurrentPath, _root);
+            _fileNodeDictionay.Add(_root.Path, _root);
             var diskUtilitys = CloudDiskManager.Instance.GetAllCloudDisk();
             foreach (var utility in diskUtilitys)
             {
@@ -47,46 +45,6 @@ namespace StarPan
             {
                 return _root;
             }
-        }
-
-        private void GenerateNode(TreeNode<PathNode> root, ICloudDiskAccessUtility utility)
-        {
-            var fileList = utility.GetFileList(root.Data.FileName+"/");
-            if (fileList == null)
-            {
-                return;
-            }
-            var fileInfoList = fileList.Select(f => new PathNode()
-            {
-                FileName = PathHelper.GetFileName(f.Path),
-                IsDir = f.IsDir,
-                CreationTime = new DateTime(f.CreateTime),
-                LastAccessTime = new DateTime(f.ModifiyTime),
-                LastWriteTime = new DateTime(f.ModifiyTime),
-                Size = f.Size,
-                CurrentPath = "/" + f.Path,
-                ParentPath = "/" + PathHelper.GetParentDirectory(f.Path),
-                Source = f.IsDir ? null : utility.Name
-            });
-            foreach (var fileInfo in fileInfoList)
-            {
-                TreeNode<PathNode> node = null;
-                if (root.GetChildrenData().All(d => d.CurrentPath != fileInfo.CurrentPath))
-                {
-                    node = root.AddChild(fileInfo);
-                    _fileNodeDictionay.Add(node.Data.CurrentPath,node);
-
-                }
-                else
-                {
-                    node = root.GetChild(f => f.CurrentPath == fileInfo.CurrentPath);
-                }
-                if (fileInfo.IsDir)
-                {
-                    GenerateNode(node, utility);
-                }
-            }
-
         }
 
         public void PrintFileCount()
@@ -105,6 +63,7 @@ namespace StarPan
                 layer--;
             }
             msg.Append(node.Data.FileName);
+            msg.Append(string.Format("({0})", node.Path));
             Console.WriteLine(msg);
             foreach (var treeNode in node.GetChildren())
             {
@@ -152,8 +111,6 @@ namespace StarPan
             var node = new PathNode()
                 {
                     CreationTime = info.CreationTime,
-                    CurrentPath = "/" + PathHelper.CombineWebPath(path, info.FileName),
-                    ParentPath = path,
                     FileName = info.FileName,
                     IsDir = info.Attributes == FileAttributes.Directory,
                     LastAccessTime = info.LastAccessTime,
@@ -162,7 +119,7 @@ namespace StarPan
                     Source = source
                 };
             var treeNode = parentNode.AddChild(node);
-            _fileNodeDictionay.Add(node.CurrentPath, treeNode);
+            _fileNodeDictionay.Add(treeNode.Path, treeNode);
         }
 
         public void RmoveNode(string path)
@@ -171,46 +128,132 @@ namespace StarPan
             if (node == null)
                 return;
 
+            _fileNodeDictionay.Remove(node.Path);
             node.RemoveSelf();
         }
 
-        public void MoveNode(string curPath, string destinationPath)
+        public void MoveNode(string curPath, string destPath)
         {
             var node = _fileNodeDictionay[curPath];
-            var destNode = _fileNodeDictionay[destinationPath];
+            var destNode = _fileNodeDictionay[destPath];
             if (node == null || destNode == null || !destNode.Data.IsDir)
             {
                 return;
             }
             if (destNode.GetChildren().Any(n => n.Data.FileName == node.Data.FileName))
             {
-                Console.WriteLine("There is file/folder with the same name {0} in {1}",node.Data.FileName,destNode.Data.CurrentPath);
+                Console.WriteLine("There is file/folder with the same name {0} in {1}", node.Data.FileName,destNode.Path);
                 return;
             }
+            UnRegisterTreeNode(node);
             node.RemoveSelf();
-            destNode.AddChild(node);
+            node = destNode.AddChild(node);
+            RegisterTreeNdoe(node);
 
         }
 
-        public void CopyNode(string curPath, string destinationPath)
+        public void CopyNode(string curPath, string destPath)
         {
             var node = _fileNodeDictionay[curPath];
-            var destNode = _fileNodeDictionay[destinationPath];
+            var destNode = _fileNodeDictionay[destPath];
             if (node == null || destNode == null || !destNode.Data.IsDir)
             {
                 return;
             }
-            if (destNode.GetChildren().Any(n => n.Data.FileName == node.Data.FileName))
+            if (destNode.GetChildrenData().Any(n => n.FileName == node.Data.FileName))
             {
-                Console.WriteLine("There is file/folder with the same name {0} in {1}", node.Data.FileName, destNode.Data.CurrentPath);
+                Console.WriteLine("There is file/folder with the same name {0} in {1}", node.Data.FileName, destNode.Path);
                 return;
             }
             var dupNode = (TreeNode<PathNode>)node.Clone();
-            destNode.AddChild(dupNode);
 
-            //TODO:处理路径变更
-            //
+            destNode.AddChild(dupNode);
+            RegisterTreeNdoe(dupNode);
         }
-        
+
+        public void RenameNode(string path, string newName)
+        {
+            var node = _fileNodeDictionay[path];
+
+            if (node == null || node.Data.FileName == newName)
+            {
+                return;
+            }
+
+            node.Rename(newName);
+
+        }
+
+        private void GenerateNode(TreeNode<PathNode> root, ICloudDiskAccessUtility utility)
+        {
+            var fileList = utility.GetFileList(root.Data.FileName + "/");
+            if (fileList == null)
+            {
+                return;
+            }
+            var fileInfoList = fileList.Select(f => new PathNode()
+            {
+                FileName = PathHelper.GetFileName(f.Path),
+                IsDir = f.IsDir,
+                CreationTime = new DateTime(f.CreateTime),
+                LastAccessTime = new DateTime(f.ModifiyTime),
+                LastWriteTime = new DateTime(f.ModifiyTime),
+                Size = f.Size,
+                Source = f.IsDir ? null : utility.Name
+            });
+            foreach (var fileInfo in fileInfoList)
+            {
+                TreeNode<PathNode> node = null;
+                if (root.GetChildrenData().All(d => d.FileName != fileInfo.FileName))
+                {
+                    node = root.AddChild(fileInfo);
+                    _fileNodeDictionay.Add(node.Path, node);
+
+                }
+                else
+                {
+                    node = root.GetChild(f => f.FileName == fileInfo.FileName);
+                }
+                if (fileInfo.IsDir)
+                {
+                    GenerateNode(node, utility);
+                }
+            }
+
+        }
+
+        private void UnRegisterTreeNode(TreeNode<PathNode> node)
+        {
+            _fileNodeDictionay.Remove(node.Path);
+            foreach (var treeNode in node.GetChildren())
+            {
+                if (treeNode.HasChild)
+                {
+                    UnRegisterTreeNode(treeNode);
+                }
+                else
+                {
+                    _fileNodeDictionay.Remove(treeNode.Path);
+                }
+
+            }
+        }
+
+        private void RegisterTreeNdoe(TreeNode<PathNode> node)
+        {
+            _fileNodeDictionay.Add(node.Path,node);
+            foreach (var treeNode in node.GetChildren())
+            {
+                if (treeNode.HasChild)
+                {
+                    RegisterTreeNdoe(treeNode);
+                }
+                else
+                {
+                    _fileNodeDictionay.Add(treeNode.Path, treeNode);
+                }
+
+            }
+        }
     }
 }

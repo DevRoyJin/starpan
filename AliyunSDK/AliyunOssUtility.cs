@@ -243,7 +243,7 @@ namespace AliyunSDK
                     {
                         //Path = oos.Key.Substring(_root.Length),
                         //remove "/" at the end of directory path
-                        Path = oos.Key.Substring(_root.Length, oos.Key.EndsWith("/") ? oos.Key.LastIndexOf("/") : oos.Key.Length),
+                        Path = oos.Key.Substring(_root.Length, oos.Key.EndsWith("/") ? oos.Key.Length - _root.Length - 1 : oos.Key.Length - _root.Length),
                         CreateTime = oos.LastModified.Ticks,
                         ModifiyTime = oos.LastModified.Ticks,
                         IsDir = oos.Key.EndsWith("/"),

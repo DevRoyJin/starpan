@@ -6,33 +6,62 @@ using System.Text;
 
 namespace StarPan.Structure
 {
-    public class TreeNode<T> :ICloneable where T:ICloneable
+    public class TreeNode<T> : ICloneable where T : ICloneable, IPathNode
     {
 
-        private IList<TreeNode<T>> _children;
+        private readonly IList<TreeNode<T>> _children;
 
         public TreeNode()
         {
             _children = new List<TreeNode<T>>();
         }
 
-        public TreeNode(T data):this()
+        public TreeNode(T data)
+            : this()
         {
             Data = data;
         }
 
-        public T Data
-        {
-            get;
-            private set;
+        public T Data { get; private set; }
 
+        public TreeNode<T> Parent { get; private set; }
+
+        public string ParentPath
+        {
+            get
+            {
+                if (this.Parent == null)
+                {
+                    return "";
+                }
+
+                Stack<string> stack = new Stack<string>();
+
+                var parent = this.Parent;
+                while (parent != null)
+                {
+                    stack.Push(parent.Data.FileName);
+                    parent = parent.Parent;
+                }
+
+                StringBuilder strBuilder = new StringBuilder();
+                string nodeName;
+                while (stack.Count>0) 
+                {
+                    nodeName = stack.Pop();
+                    if (nodeName != "/")
+                    {
+                        strBuilder.Append(nodeName);
+                    }
+                    strBuilder.Append("/");
+                } 
+                return strBuilder.ToString();
+            }
         }
 
-        public TreeNode<T> Parent
+        public string Path
         {
-            get;
-            private set;
-
+            get { return ParentPath + Data.FileName; }
         }
 
         public int Layer
@@ -41,7 +70,7 @@ namespace StarPan.Structure
             {
                 int i = 1;
                 var parent = this.Parent;
-                while(parent!=null)
+                while (parent != null)
                 {
                     i++;
                     parent = parent.Parent;
@@ -52,14 +81,15 @@ namespace StarPan.Structure
 
         public bool HasChild
         {
-            get
-            {
-                return _children.Any();
-            }
+            get { return _children.Any(); }
         }
 
         public TreeNode<T> AddChild(T data)
         {
+            if (!this.Data.IsDir)
+            {
+                return null;
+            }
             var node = new TreeNode<T>(data);
             this._children.Add(node);
             node.Parent = this;
@@ -68,6 +98,10 @@ namespace StarPan.Structure
 
         public TreeNode<T> AddChild(TreeNode<T> node)
         {
+            if (!this.Data.IsDir)
+            {
+                return null;
+            }
             this._children.Add(node);
             node.Parent = this;
             return node;
@@ -104,13 +138,18 @@ namespace StarPan.Structure
 
         }
 
+        public void Rename(string newName)
+        {
+            this.Data.FileName = newName;
+        }
+
         public object Clone()
         {
-            var data = (T)this.Data.Clone();
+            var data = (T) this.Data.Clone();
             var node = new TreeNode<T>(data);
             foreach (var treeNode in _children)
             {
-                node.AddChild((TreeNode<T>)treeNode.Clone());
+                node.AddChild((TreeNode<T>) treeNode.Clone());
 
             }
             return node;

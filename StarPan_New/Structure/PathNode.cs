@@ -7,22 +7,12 @@ using Dokan;
 
 namespace StarPan.Structure
 {
-    public class PathNode:ICloneable
+    public class PathNode:ICloneable,IPathNode
     {
         /// <summary>
         /// 文件(夹)名
         /// </summary>
         public string FileName { get; set; }
-
-        /// <summary>
-        /// 文件(夹)路径
-        /// </summary>
-        public string CurrentPath { get; set; }
-
-        /// <summary>
-        /// 上一级文件夹路径
-        /// </summary>
-        public string ParentPath { get; set; }
 
         public DateTime CreationTime { get; set; }
 
@@ -58,12 +48,10 @@ namespace StarPan.Structure
             return new PathNode()
                 {
                     CreationTime = CreationTime,
-                    CurrentPath = CurrentPath,
                     FileName = FileName,
                     IsDir = IsDir,
                     LastAccessTime = LastAccessTime,
                     LastWriteTime = LastWriteTime,
-                    ParentPath = ParentPath,
                     Size = Size,
                     Source = Source
                 };

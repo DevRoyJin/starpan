@@ -41,7 +41,7 @@ namespace StarPan
                     !string.IsNullOrEmpty(diskConfig.Token) &&
                     !string.IsNullOrEmpty(diskConfig.TokenSecret))
                 {
-                    args = new[]
+                    args = new object[]
                     {
                         diskConfig.Root,diskConfig.Name,
                         diskConfig.ConsumerKey,
@@ -54,17 +54,17 @@ namespace StarPan
                          !string.IsNullOrEmpty(diskConfig.AccessSerect)&&
                          !string.IsNullOrEmpty(diskConfig.BucketName))
                 {
-                    args = new[] { diskConfig.Root, diskConfig.Name, diskConfig.AccessKey, diskConfig.AccessSerect, diskConfig.BucketName };
+                    args = new object[] { diskConfig.Root, diskConfig.Name, diskConfig.AccessKey, diskConfig.AccessSerect, diskConfig.BucketName };
                 }
 
                 else if (!string.IsNullOrEmpty(diskConfig.AccessToken))
                 {
 
-                    args = new[] {diskConfig.Root, diskConfig.Name, diskConfig.AccessToken};
+                    args = new object[] { diskConfig.Root, diskConfig.Name, diskConfig.AccessToken };
                 }
                 else
                 {
-                    throw new Exception(string.Format("Invalid cloudDiskConfiguration: name={0}", diskConfig.Name));
+                    Console.WriteLine("Error-->>Invalid cloudDiskConfiguration: name={0}", diskConfig.Name);
                 }
 
                 var utility =
