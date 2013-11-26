@@ -177,11 +177,11 @@ namespace KuaiPanSDK
         {
             dirPath = PathHelper.CombineWebPath(_root, dirPath);
             KuaiPanSDK.Model.MetaData FilesLists = _sdk.GetMetaData(dirPath, null);
-            List<DiskAPIBase.File.CloudFileInfo> AllFiles = null;
+            List<DiskAPIBase.File.CloudFileInfo> AllFiles = new List<DiskAPIBase.File.CloudFileInfo>();
             foreach (var f in FilesLists.Files)
             {
                 DiskAPIBase.File.CloudFileInfo file = new DiskAPIBase.File.CloudFileInfo();
-                file.Path = dirPath + "/" + f.Name;
+                file.Path = dirPath  + f.Name;
                 file.CreateTime = f.Createtime.Ticks;
                 file.ModifiyTime = f.ModifyTime.Ticks;
                 file.Size = f.Size;
@@ -194,6 +194,7 @@ namespace KuaiPanSDK
                 {
                     file.IsDir = false;
                 }
+                AllFiles.Add(file);
 
             }
 
