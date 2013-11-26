@@ -42,7 +42,7 @@ namespace StarPan
     class BaiduPan : IDiskUtility
     {
 
-        public static string access_token = "3.610e76fb259ee1c0cee211b548ff1a40.2592000.1385016898.1477197110-1567359";
+        public static string access_token = "3.82e22f97a851206bab41cfa680a7eede.2592000.1387678599.1477197110-1567359";
         public static string appPath = "/apps/sjtupan/";
 
         #region 上传文件缓冲
