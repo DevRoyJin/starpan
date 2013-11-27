@@ -15,7 +15,7 @@ namespace StarPan
             //string root = "/apps";
             //string path = "111/22/3.txt";
             //path = PathHelper.CombineWebPath(root, path);
-
+            Console.WriteLine(~(1<<31));
             var instantce = CloudDiskManager.Instance;
             instantce.PrintFreeSpace();
 

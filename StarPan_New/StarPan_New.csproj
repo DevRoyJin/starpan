@@ -42,6 +42,7 @@
     <Compile Include="CloudDiskManager.cs" />
     <Compile Include="Configuration\CloudDiskConfigurationCollection.cs" />
     <Compile Include="Configuration\CloudDisksConfigurationSection.cs" />
+    <Compile Include="DokanCloudDiskOperation.cs" />
     <Compile Include="DokanProxy.cs" />
     <Compile Include="FileElement.cs" />
     <Compile Include="Program.cs" />
@@ -50,6 +51,7 @@
     <Compile Include="Structure\IPathNode.cs" />
     <Compile Include="Structure\PathNode.cs" />
     <Compile Include="Structure\TreeNode.cs" />
+    <Compile Include="UtilityMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">

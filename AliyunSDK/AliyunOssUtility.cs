@@ -93,7 +93,7 @@ namespace AliyunSDK
 
         public long GetQuota()
         {
-            return Int64.MaxValue;
+            return ~(1<<31);//2G
         }
 
         public long GetUsedSpace()
@@ -115,7 +115,7 @@ namespace AliyunSDK
         
         public long GetFreeSpace()
         {
-            return Int64.MaxValue;
+            return GetQuota() - GetUsedSpace();
         }
 
         public bool UploadFile(string path,byte[] fileData)
