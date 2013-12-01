@@ -1,4 +1,4 @@
-﻿
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -18,7 +18,7 @@ namespace StarPan
     //    {
     //        string letter = c.ToString();
     //        Bitmap bm = new Bitmap(16, 16);
-            
+
     //        Graphics g = Graphics.FromImage((Image)bm);
     //        g.SmoothingMode = SmoothingMode.AntiAlias;
     //        DrawBall(g, new Rectangle(0, 0, 15, 15), ballColor);
@@ -57,19 +57,19 @@ namespace StarPan
         //}
 
         /// <summary>
-        /// Returns the parent-path of a file or directory,
-        /// similar to Path.GetDirectoryName
+        ///     Returns the parent-path of a file or directory,
+        ///     similar to Path.GetDirectoryName
         /// </summary>
         /// <param name="sourcePath">the full sourcepath</param>
         /// <returns>a path to it's parent</returns>
         internal static string GetPathPart(this string sourcePath)
-        {            
+        {
             return sourcePath.Substring(0, sourcePath.LastIndexOf('\\'));
         }
 
         /// <summary>
-        /// Returns the filename-part of a string that contains a full path,
-        /// similar to Path.GetFileName()
+        ///     Returns the filename-part of a string that contains a full path,
+        ///     similar to Path.GetFileName()
         /// </summary>
         /// <param name="sourcePath">a folder or file, with a full path</param>
         /// <returns>The item's name, without the path</returns>
@@ -79,25 +79,25 @@ namespace StarPan
         }
 
         /// <summary>
-        /// Used to retrieve the first available driveletter
+        ///     Used to retrieve the first available driveletter
         /// </summary>
         /// <returns>A driveletter that's not in use yet</returns>
         internal static char GetFirstAvailableDriveLetter()
         {
             // these are the driveletters that are in use;
-            var usedDriveLetters =
+            IEnumerable<char> usedDriveLetters =
                 from drive
-                in DriveInfo.GetDrives()
+                    in DriveInfo.GetDrives()
                 select drive.Name.ToUpperInvariant()[0];
 
             // these are all possible driveletters [D..Z] that
             // we can choose from (don't want "B" as drive);
             string allDrives = string.Empty;
             for (char c = 'D'; c < 'Z'; c++)
-                allDrives += c.ToString();
+                allDrives += c;
 
             // these are the ones that are available;
-            var availableDriveLetters = allDrives.Except(usedDriveLetters);
+            IEnumerable<char> availableDriveLetters = allDrives.Except(usedDriveLetters);
 
             if (!availableDriveLetters.Any())
                 throw new DriveNotFoundException("No drives available!");

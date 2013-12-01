@@ -210,21 +210,21 @@ namespace CloudDiskTest
             //}
 
 
-            //string folderPath = "app/test/";
-            //if (AliyunOssUtility.Instance.DeleteDirectory(folderPath))
-            //{
-            //    Console.WriteLine("Delete folder {0} succeeded.", folderPath);
-            //}
-            //else
-            //{
-            //    Console.WriteLine("Delete folder {0} failed.", folderPath);
-            //}
+            string folderPath = "test/";
+            if (AliyunOssUtility.Instance.DeleteDirectory(folderPath))
+            {
+                Console.WriteLine("Delete folder {0} succeeded.", folderPath);
+            }
+            else
+            {
+                Console.WriteLine("Delete folder {0} failed.", folderPath);
+            }
             #endregion
 
             //get file list
             #region Get File List
 
-            //var list = AliyunOssUtility.Instance.GetFileList("app/test/");
+            //var list = AliyunOssUtility.Instance.GetFileList("test/");
             //foreach (var f in list)
             //{
             //    Console.WriteLine("FileName:{0}\r\nCreationTime:{1}\r\nModificationTime:{2}\r\nSize:{3}\r\nIsDir:{4}\r\n------------------------------------",

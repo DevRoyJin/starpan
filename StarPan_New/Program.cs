@@ -19,7 +19,7 @@ namespace StarPan
             var instantce = CloudDiskManager.Instance;
             instantce.PrintFreeSpace();
 
-            var proxy = new DokanProxy();
+            var proxy = new DokanOperationProxy();
             proxy.PrintFileCount();
             proxy.PrintNode(proxy.Root);
 

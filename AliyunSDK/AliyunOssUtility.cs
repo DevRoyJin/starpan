@@ -21,7 +21,10 @@ namespace AliyunSDK
 
         private readonly OssClient _ossClient;
 
-        public AliyunOssUtility():this("aliyun","apps/","Y8HLBRjlRgKp5SXV", "6nRLip0xiul2CZVsTDe36TYoqD09YT", "sjtupan")
+        private Stack<string> _filesFroDelStack = new Stack<string>();
+
+        public AliyunOssUtility()
+            : this("app/", "aliyun", "Y8HLBRjlRgKp5SXV", "6nRLip0xiul2CZVsTDe36TYoqD09YT", "localclouddisk")
         {
         }
 
@@ -194,10 +197,9 @@ namespace AliyunSDK
             try
             {
                 path = PathHelper.CombineWebPath(_root, path);
-                //TODO:需要递归删除所有子文件
-                
-                //delete itself
-                _ossClient.DeleteObject(BucketName,path);
+                //递归删除所有子文件
+                DeleteDirectoryInternal(path);
+
                 return true;
             }
             catch (OssException ossEx)
@@ -326,11 +328,31 @@ namespace AliyunSDK
         }
         #endregion
 
+        private void DeleteDirectoryInternal(string dirPath)
+        {
+            if (_filesFroDelStack.Count > 0)
+            {
+                _filesFroDelStack.Clear();
+            }
+            var oList = _ossClient.ListObjects(BucketName, dirPath);//路径下所有文件
+            foreach (var obj in oList.ObjectSummaries)
+            {
+                if (obj.Key.EndsWith("/"))
+                {
+                    _filesFroDelStack.Push(obj.Key);
+                }
+                else
+                {
+                    _ossClient.DeleteObject(BucketName,obj.Key);
+                }
+            }
 
+            while (_filesFroDelStack.Count>0)
+            {
+                var delKey = _filesFroDelStack.Pop();
+                _ossClient.DeleteObject(BucketName, delKey);
+            }
 
-
-
-
-
+        }
     }
 }

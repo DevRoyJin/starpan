@@ -14,7 +14,8 @@ namespace StarPan
         private int Context = 0;
         private int count_;
         private string rootPath = "/apps/sjtupan/";
-        private DokanProxy proxy;
+        private DokanOperationProxy _operationProxy;
+
 
         private ICloudDiskAccessUtility CloudDiskAccessUtility
         {
@@ -35,7 +36,7 @@ namespace StarPan
         public StarPanOperations()
         {
             count_ = 1;
-            proxy = new DokanProxy();
+            _operationProxy = new DokanOperationProxy();
 
         }
 
@@ -162,8 +163,8 @@ namespace StarPan
             string targetPath = filename.Replace("\\", "/");
             Console.WriteLine("Dokan FindFiles, file name is " + filename);
 
-            //new mechanism through DokanProxy
-            var allfilesList = proxy.FindAllChildren(targetPath);
+            //new mechanism through DokanOperationProxy
+            var allfilesList = _operationProxy.FindAllChildren(targetPath);
             foreach (var f in allfilesList)
             {
                 FileInformation file = f.ToFileInformation();
@@ -242,7 +243,7 @@ namespace StarPan
                 else
                 {
 
-                    var f = proxy.GetFileInfo(targetPath);
+                    var f = _operationProxy.GetFileInfo(targetPath);
                      fileinfo = f.ToFileInformation();
                     
 

@@ -10,7 +10,8 @@ namespace StarPan
 {
     public class CloudDiskManager
     {
-        private readonly IDictionary<string,ICloudDiskAccessUtility> _mCloudDisks;
+        private static CloudDiskManager _cloudDiskManager;
+        private readonly IDictionary<string, ICloudDiskAccessUtility> _mCloudDisks;
 
         private CloudDiskManager()
         {
@@ -21,10 +22,9 @@ namespace StarPan
             if (section == null)
             {
                 throw new Exception("Error:Please config the cloud disk first.");
-
             }
 
-            foreach (var item in section.CloudDiskGroup)
+            foreach (object item in section.CloudDiskGroup)
             {
                 var diskConfig = item as CloudDiskConfiguration;
                 if (diskConfig == null)
@@ -32,8 +32,8 @@ namespace StarPan
                     Console.WriteLine("Error: Read cloud disk configuration failed.");
                     continue;
                 }
-                var dll = diskConfig.DllName;
-                var cn = diskConfig.ClassName;
+                string dll = diskConfig.DllName;
+                string cn = diskConfig.ClassName;
                 object[] args = null;
 
                 if (!string.IsNullOrEmpty(diskConfig.ConsumerKey) &&
@@ -43,24 +43,27 @@ namespace StarPan
                 {
                     args = new object[]
                     {
-                        diskConfig.Root,diskConfig.Name,
+                        diskConfig.Root, diskConfig.Name,
                         diskConfig.ConsumerKey,
                         diskConfig.ConsumerSecret,
                         diskConfig.Token,
-                        diskConfig.TokenSecret,
+                        diskConfig.TokenSecret
                     };
                 }
                 else if (!string.IsNullOrEmpty(diskConfig.AccessKey) &&
-                         !string.IsNullOrEmpty(diskConfig.AccessSerect)&&
+                         !string.IsNullOrEmpty(diskConfig.AccessSerect) &&
                          !string.IsNullOrEmpty(diskConfig.BucketName))
                 {
-                    args = new object[] { diskConfig.Root, diskConfig.Name, diskConfig.AccessKey, diskConfig.AccessSerect, diskConfig.BucketName };
+                    args = new object[]
+                    {
+                        diskConfig.Root, diskConfig.Name, diskConfig.AccessKey, diskConfig.AccessSerect,
+                        diskConfig.BucketName
+                    };
                 }
 
                 else if (!string.IsNullOrEmpty(diskConfig.AccessToken))
                 {
-
-                    args = new object[] { diskConfig.Root, diskConfig.Name, diskConfig.AccessToken };
+                    args = new object[] {diskConfig.Root, diskConfig.Name, diskConfig.AccessToken};
                 }
                 else
                 {
@@ -75,11 +78,8 @@ namespace StarPan
                 {
                     _mCloudDisks.Add(diskConfig.Name, utility);
                 }
-
             }
         }
-
-        private static CloudDiskManager _cloudDiskManager;
 
         public static CloudDiskManager Instance
         {
@@ -88,14 +88,13 @@ namespace StarPan
                 if (_cloudDiskManager == null)
                 {
                     _cloudDiskManager = new CloudDiskManager();
-                    
                 }
                 return _cloudDiskManager;
             }
         }
 
         /// <summary>
-        /// 按名称获取网盘操作接口实例
+        ///     按名称获取网盘操作接口实例
         /// </summary>
         /// <param name="name">网盘名称</param>
         /// <returns></returns>
@@ -103,13 +102,14 @@ namespace StarPan
         {
             return _mCloudDisks[name];
         }
-        
+
         /// <summary>
-        /// 按策略获取网盘操作接口实例
+        ///     按策略获取网盘操作接口实例
         /// </summary>
         /// <param name="diskSelectingStrategy">选取网盘策略</param>
         /// <returns></returns>
-        public ICloudDiskAccessUtility GetCloudDisk(Func<IEnumerable<ICloudDiskAccessUtility>, ICloudDiskAccessUtility> diskSelectingStrategy)
+        public ICloudDiskAccessUtility GetCloudDisk(
+            Func<IEnumerable<ICloudDiskAccessUtility>, ICloudDiskAccessUtility> diskSelectingStrategy)
         {
             return diskSelectingStrategy(_mCloudDisks.Values);
         }
@@ -124,9 +124,8 @@ namespace StarPan
         {
             foreach (var kv in _mCloudDisks)
             {
-                Console.WriteLine("Disk :{0}-->free space:{1}",kv.Key,kv.Value.GetFreeSpace());
+                Console.WriteLine("Disk :{0}-->free space:{1}", kv.Key, kv.Value.GetFreeSpace());
             }
         }
-
     }
 }
