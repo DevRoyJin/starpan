@@ -26,6 +26,7 @@ namespace BaiduCloudSDK
 
         #endregion
 
+        //测试用
         public BaiduPCSDiskUtility()
         {
             _name = "baidu";

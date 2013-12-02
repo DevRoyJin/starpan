@@ -208,9 +208,9 @@ namespace StarPan.Structure
                 }
                 if (_fileDataStream != null)
                 {
-                    int iResult = _fileDataStream.Read(buffer, (int)offset, buffer.Length);
+                    int iResult = _fileDataStream.Read(buffer, 0, buffer.Length);
 
-                    if (iResult < buffer.Length)
+                    if (!_fileDataStream.CanRead)
                     {
                         //读取完毕,释放内存
                         _fileDataStream.Dispose();
