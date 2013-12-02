@@ -208,8 +208,10 @@ namespace StarPan.Structure
                 }
                 if (_fileDataStream != null)
                 {
+                    Console.WriteLine("Request file data-->>file:{0} buffer:{1} offset:{2}",FileInfo.FileName,buffer.Length,offset);
+                    Console.WriteLine("stream length:{0}  stream position:{1}", _fileDataStream.Length, _fileDataStream.Position);
                     int iResult = _fileDataStream.Read(buffer, 0, buffer.Length);
-
+                    Console.WriteLine("Read bytes:{0}",iResult);
                     if (!_fileDataStream.CanRead)
                     {
                         //读取完毕,释放内存
@@ -220,6 +222,7 @@ namespace StarPan.Structure
                 }
             }
             return 0;
+
         }
     }
 }
