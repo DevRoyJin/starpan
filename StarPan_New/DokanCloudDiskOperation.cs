@@ -398,7 +398,7 @@ namespace StarPan
             totalBytes = 1024*1024*1024; //TODO:Read form config
 
             // The total number free bytes amounts to the total, minus what's used;
-            freeBytesAvailable = (ulong) _operationProxy.Root.Size;
+            freeBytesAvailable = totalBytes - (ulong) _operationProxy.Root.Size;
 
             // The Dokan-interface seems to ignore this one;
             totalFreeBytes = int.MaxValue;
