@@ -18,21 +18,6 @@ namespace StarPan.Structure
         /// </summary>
         public string Source { get; set; }
 
-
-        public object Clone()
-        {
-            return new PathInfo
-            {
-                CreationTime = CreationTime,
-                FileName = FileName,
-                IsDir = IsDir,
-                LastAccessTime = LastAccessTime,
-                LastWriteTime = LastWriteTime,
-                Size = Size,
-                Source = Source
-            };
-        }
-
         /// <summary>
         ///     文件(夹)名
         /// </summary>
@@ -53,6 +38,20 @@ namespace StarPan.Structure
                 LastAccessTime = LastAccessTime,
                 LastWriteTime = LastWriteTime,
                 Length = Size
+            };
+        }
+
+        public object Clone()
+        {
+            return new PathInfo
+            {
+                CreationTime = CreationTime,
+                FileName = FileName,
+                IsDir = IsDir,
+                LastAccessTime = LastAccessTime,
+                LastWriteTime = LastWriteTime,
+                Size = Size,
+                Source = Source
             };
         }
     }

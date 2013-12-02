@@ -31,7 +31,8 @@ namespace StarPan
             opt.UseStdErr = true;
             opt.VolumeLabel = "SjtuPan";
             opt.RemovableDrive = true;
-            int status = DokanNet.DokanMain(opt, new StarPanOperations());
+            //int status = DokanNet.DokanMain(opt, new StarPanOperations());
+            int status = DokanNet.DokanMain(opt, new DokanCloudDiskOperation());
 
 
 

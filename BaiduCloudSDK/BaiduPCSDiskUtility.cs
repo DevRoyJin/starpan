@@ -1,22 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.Remoting.Messaging;
 using System.Text;
+using DiskAPIBase;
 using DiskAPIBase.File;
-using Newtonsoft;
-using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using DiskAPIBase;
-
 
 namespace BaiduCloudSDK
 {
     public class BaiduPCSDiskUtility : ICloudDiskAccessUtility
     {
         #region Constant
+
         private const string PcsPath = @"/apps/sjtupan";
         private const long SingleFileLengthLimitation = 2147483648L;
         private const string DefaultUrl = "";
@@ -27,11 +25,13 @@ namespace BaiduCloudSDK
         #endregion
 
         //测试用
+        private static BaiduPCSDiskUtility _utility;
+
         public BaiduPCSDiskUtility()
         {
             _name = "baidu";
             _root = "/apps/测试应用";
-            _accessToken="3.a0fdecf6c512ce56ff547b1fcbdc9750.2592000.1386781278.4195463253-248414";
+            _accessToken = "3.a0fdecf6c512ce56ff547b1fcbdc9750.2592000.1386781278.4195463253-248414";
         }
 
         public BaiduPCSDiskUtility(string root, string name, string acessToken)
@@ -41,10 +41,6 @@ namespace BaiduCloudSDK
             _accessToken = acessToken;
         }
 
-
-
-
-        private static BaiduPCSDiskUtility _utility;
 
         public static BaiduPCSDiskUtility Instance
         {
@@ -60,6 +56,7 @@ namespace BaiduCloudSDK
         }
 
         #region IDiskUtility Members
+
         public string Name
         {
             get { return _name; }
@@ -71,15 +68,14 @@ namespace BaiduCloudSDK
         }
 
 
-
         public long GetQuota()
         {
-            var quotaJson = GetQuotaDataInternal();
+            string quotaJson = GetQuotaDataInternal();
             if (quotaJson == null)
             {
                 return 0;
             }
-            JObject jo = (JObject)JsonConvert.DeserializeObject(quotaJson);
+            var jo = (JObject) JsonConvert.DeserializeObject(quotaJson);
             long lSpace;
             if (Int64.TryParse(jo["quota"].ToString(), out lSpace))
             {
@@ -91,12 +87,12 @@ namespace BaiduCloudSDK
 
         public long GetUsedSpace()
         {
-            var quotaJson = GetQuotaDataInternal();
+            string quotaJson = GetQuotaDataInternal();
             if (quotaJson == null)
             {
                 return 0;
             }
-            JObject jo = (JObject)JsonConvert.DeserializeObject(quotaJson);
+            var jo = (JObject) JsonConvert.DeserializeObject(quotaJson);
             long lSpace;
             if (Int64.TryParse(jo["used"].ToString(), out lSpace))
             {
@@ -109,14 +105,15 @@ namespace BaiduCloudSDK
 
         public long GetFreeSpace()
         {
-            var quotaJson = GetQuotaDataInternal();
+            string quotaJson = GetQuotaDataInternal();
             if (quotaJson == null)
             {
                 return 0;
             }
-            JObject jo = (JObject)JsonConvert.DeserializeObject(quotaJson);
-            long lSpace,usedSpace;
-            if (Int64.TryParse(jo["quota"].ToString(), out lSpace) && Int64.TryParse(jo["used"].ToString(), out usedSpace))
+            var jo = (JObject) JsonConvert.DeserializeObject(quotaJson);
+            long lSpace, usedSpace;
+            if (Int64.TryParse(jo["quota"].ToString(), out lSpace) &&
+                Int64.TryParse(jo["used"].ToString(), out usedSpace))
             {
                 return lSpace - usedSpace;
             }
@@ -125,8 +122,7 @@ namespace BaiduCloudSDK
         }
 
 
-
-        public bool UploadFile(string path,byte[] fileData)
+        public bool UploadFile(string path, byte[] fileData)
         {
             try
             {
@@ -135,18 +131,15 @@ namespace BaiduCloudSDK
                 {
                     throw new InvalidOperationException("No enough space.");
                 }
-                var json = "";
+                string json = "";
                 if (fileData.Length > SingleFileLengthLimitation)
                 {
                     //分片上传（>2G大文件）
                     Console.WriteLine("The file is too large, don't supported now!");
                     return false;
                 }
-                else
-                {
-                    //一般文件上传
-                    json = UploadInternal(path,fileData);
-                }
+                //一般文件上传
+                json = UploadInternal(path, fileData);
                 var jo = (JObject) JsonConvert.DeserializeObject(json);
                 if (jo == null)
                 {
@@ -154,19 +147,18 @@ namespace BaiduCloudSDK
                     return false;
                 }
                 return true;
-
             }
             catch (WebException we)
             {
-                var msg = "";
+                string msg = "";
                 var res = we.Response as HttpWebResponse;
                 if (res != null)
                 {
-                    var sRes = HttpWebResponseUtility.ConvertReponseToString(res);
+                    string sRes = HttpWebResponseUtility.ConvertReponseToString(res);
                     var jsRes = (JObject) JsonConvert.DeserializeObject(sRes);
                     if (jsRes != null && jsRes["error_msg"] != null)
                     {
-                        msg = "Upload failed-->error_msg:" + jsRes["error_msg"].ToString();
+                        msg = "Upload failed-->error_msg:" + jsRes["error_msg"];
                     }
                 }
                 if (string.IsNullOrEmpty(msg))
@@ -174,18 +166,16 @@ namespace BaiduCloudSDK
                     msg = we.Message;
                 }
                 Console.WriteLine(msg);
-
             }
             catch (Exception exception)
             {
-                Console.WriteLine("Upload file failed:"+exception.Message);
+                Console.WriteLine("Upload file failed:" + exception.Message);
                 //Console.WriteLine(exception.StackTrace);
             }
             return false;
-
         }
 
-        public bool DownloadFile(string pcsPath,out byte[] filebuffer)
+        public bool DownloadFile(string pcsPath, out byte[] filebuffer)
         {
             try
             {
@@ -195,15 +185,15 @@ namespace BaiduCloudSDK
             }
             catch (WebException we)
             {
-                var msg = "";
+                string msg = "";
                 var res = we.Response as HttpWebResponse;
                 if (res != null)
                 {
-                    var sRes = HttpWebResponseUtility.ConvertReponseToString(res);
-                    var jsRes = (JObject)JsonConvert.DeserializeObject(sRes);
+                    string sRes = HttpWebResponseUtility.ConvertReponseToString(res);
+                    var jsRes = (JObject) JsonConvert.DeserializeObject(sRes);
                     if (jsRes != null && jsRes["error_msg"] != null)
                     {
-                        msg = "Download failed:" + jsRes["error_msg"].ToString();
+                        msg = "Download failed:" + jsRes["error_msg"];
                     }
                 }
                 if (string.IsNullOrEmpty(msg))
@@ -211,40 +201,35 @@ namespace BaiduCloudSDK
                     msg = we.Message;
                 }
                 Console.WriteLine(msg);
-
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Download file {0} failed:"+ex.ToString(),pcsPath);
-                
+                Console.WriteLine("Download file {0} failed:" + ex, pcsPath);
             }
             filebuffer = null;
             return false;
-
-
         }
 
         public bool CreateDirectory(string pcsPath)
         {
-            
             try
             {
-               pcsPath = PathHelper.CombineWebPath(_root, pcsPath);
-               var ret = CreateDirectoryInternal(pcsPath);
-               Console.WriteLine("Make dir succeeds-->"+ret);
+                pcsPath = PathHelper.CombineWebPath(_root, pcsPath);
+                string ret = CreateDirectoryInternal(pcsPath);
+                Console.WriteLine("Make dir succeeds-->" + ret);
                 return true;
             }
             catch (WebException we)
             {
-                var msg = "";
+                string msg = "";
                 var res = we.Response as HttpWebResponse;
                 if (res != null)
                 {
-                    var sRes = HttpWebResponseUtility.ConvertReponseToString(res);
-                    var jsRes = (JObject)JsonConvert.DeserializeObject(sRes);
+                    string sRes = HttpWebResponseUtility.ConvertReponseToString(res);
+                    var jsRes = (JObject) JsonConvert.DeserializeObject(sRes);
                     if (jsRes != null && jsRes["error_msg"] != null)
                     {
-                        msg = "Make dir failed:" + jsRes["error_msg"].ToString();
+                        msg = "Make dir failed:" + jsRes["error_msg"];
                     }
                 }
                 if (string.IsNullOrEmpty(msg))
@@ -266,21 +251,21 @@ namespace BaiduCloudSDK
             try
             {
                 pcsPath = PathHelper.CombineWebPath(_root, pcsPath);
-                var ret = DeleteDirectoryInternal(pcsPath);
-                Console.WriteLine("Delete directory {0} succeeded-->" + ret,pcsPath);
+                string ret = DeleteDirectoryInternal(pcsPath);
+                Console.WriteLine("Delete directory {0} succeeded-->" + ret, pcsPath);
                 return true;
             }
             catch (WebException we)
             {
-                var msg = "";
+                string msg = "";
                 var res = we.Response as HttpWebResponse;
                 if (res != null)
                 {
-                    var sRes = HttpWebResponseUtility.ConvertReponseToString(res);
-                    var jsRes = (JObject)JsonConvert.DeserializeObject(sRes);
+                    string sRes = HttpWebResponseUtility.ConvertReponseToString(res);
+                    var jsRes = (JObject) JsonConvert.DeserializeObject(sRes);
                     if (jsRes != null && jsRes["error_msg"] != null)
                     {
-                        msg = "Delete directory {0} failed:" + jsRes["error_msg"].ToString();
+                        msg = "Delete directory {0} failed:" + jsRes["error_msg"];
                     }
                 }
                 if (string.IsNullOrEmpty(msg))
@@ -301,28 +286,28 @@ namespace BaiduCloudSDK
             try
             {
                 pcsPath = PathHelper.CombineWebPath(_root, pcsPath);
-                var ret = DeleteDirectoryInternal(pcsPath);
-                Console.WriteLine("Delete file {0} succeeded-->" + ret,pcsPath);
+                string ret = DeleteDirectoryInternal(pcsPath);
+                Console.WriteLine("Delete file {0} succeeded-->" + ret, pcsPath);
                 return true;
             }
             catch (WebException we)
             {
-                var msg = "";
+                string msg = "";
                 var res = we.Response as HttpWebResponse;
                 if (res != null)
                 {
-                    var sRes = HttpWebResponseUtility.ConvertReponseToString(res);
-                    var jsRes = (JObject)JsonConvert.DeserializeObject(sRes);
+                    string sRes = HttpWebResponseUtility.ConvertReponseToString(res);
+                    var jsRes = (JObject) JsonConvert.DeserializeObject(sRes);
                     if (jsRes != null && jsRes["error_msg"] != null)
                     {
-                        msg = "Delete file {0} failed:" + jsRes["error_msg"].ToString();
+                        msg = "Delete file {0} failed:" + jsRes["error_msg"];
                     }
                 }
                 if (string.IsNullOrEmpty(msg))
                 {
                     msg = "Delete file {0} failed:" + we.Message;
                 }
-                Console.WriteLine(msg,pcsPath);
+                Console.WriteLine(msg, pcsPath);
             }
             catch (Exception ex)
             {
@@ -331,36 +316,27 @@ namespace BaiduCloudSDK
             return false;
         }
 
-        public DateTime getRightTime(long tmpTime)
-        {
-            DateTime dtStart = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
-            long ITime = tmpTime * 10000000;
-            TimeSpan toNow = new TimeSpan(ITime);
-            return dtStart.Add(toNow);
-        }
-
-        public IList<DiskAPIBase.File.CloudFileInfo> GetFileList(string dirPath)
+        public IList<CloudFileInfo> GetFileList(string dirPath)
         {
             try
             {
                 dirPath = PathHelper.CombineWebPath(_root, dirPath);
-                var ret = GetFileListInternal(dirPath);
-                var responseJo = 
-                    (JObject)JsonConvert.DeserializeObject(ret);
-                var sFileList = JsonConvert.DeserializeObject <List<JObject>>(responseJo["list"].ToString());
-                var fileList = sFileList.Select(jo =>
+                string ret = GetFileListInternal(dirPath);
+                var responseJo =
+                    (JObject) JsonConvert.DeserializeObject(ret);
+                var sFileList = JsonConvert.DeserializeObject<List<JObject>>(responseJo["list"].ToString());
+                List<CloudFileInfo> fileList = sFileList.Select(jo =>
                 {
-                    var isDir = jo["isdir"].ToObject<int>() == 1;
+                    bool isDir = jo["isdir"].ToObject<int>() == 1;
                     return new CloudFileInfo
                     {
                         //Path = jo["path"].ToString().Substring(_root.Length) + (isDir ? "/" : ""),
                         //remove "/" at the end of directory path
                         Path = jo["path"].ToString().Substring(_root.Length),
-                        CreateTime = getRightTime(jo["ctime"].ToObject<long>()).Ticks,
-                        ModifiyTime = getRightTime(jo["mtime"].ToObject<long>()).Ticks,
+                        CreateTime = GetRightTime(jo["ctime"].ToObject<long>()).Ticks,
+                        ModifiyTime = GetRightTime(jo["mtime"].ToObject<long>()).Ticks,
                         Size = jo["size"].ToObject<long>(),
                         IsDir = isDir
-
                     };
                 }).ToList();
 
@@ -368,15 +344,15 @@ namespace BaiduCloudSDK
             }
             catch (WebException we)
             {
-                var msg = "";
+                string msg = "";
                 var res = we.Response as HttpWebResponse;
                 if (res != null)
                 {
-                    var sRes = HttpWebResponseUtility.ConvertReponseToString(res);
-                    var jsRes = (JObject)JsonConvert.DeserializeObject(sRes);
+                    string sRes = HttpWebResponseUtility.ConvertReponseToString(res);
+                    var jsRes = (JObject) JsonConvert.DeserializeObject(sRes);
                     if (jsRes != null && jsRes["error_msg"] != null)
                     {
-                        msg = "Get file list {0} failed:" + jsRes["error_msg"].ToString();
+                        msg = "Get file list {0} failed:" + jsRes["error_msg"];
                     }
                 }
                 if (string.IsNullOrEmpty(msg))
@@ -397,33 +373,32 @@ namespace BaiduCloudSDK
             try
             {
                 path = PathHelper.CombineWebPath(_root, path);
-                var ret = GetFileInfoInternal(path);
+                string ret = GetFileInfoInternal(path);
                 var responseJo =
-                    (JObject)JsonConvert.DeserializeObject(ret);
+                    (JObject) JsonConvert.DeserializeObject(ret);
                 var sFileList = JsonConvert.DeserializeObject<List<JObject>>(responseJo["list"].ToString());
-                var jo = sFileList[0];
-                var isDir = jo["isdir"].ToObject<int>() == 1;
+                JObject jo = sFileList[0];
+                bool isDir = jo["isdir"].ToObject<int>() == 1;
                 return new CloudFileInfo
                 {
-                    Path = jo["path"].ToString().Substring(_root.Length) + (isDir?"/":""),
+                    Path = jo["path"].ToString().Substring(_root.Length) + (isDir ? "/" : ""),
                     CreateTime = jo["ctime"].ToObject<long>(),
                     ModifiyTime = jo["mtime"].ToObject<long>(),
                     Size = jo["size"].ToObject<long>(),
                     IsDir = isDir
-
                 };
             }
             catch (WebException we)
             {
-                var msg = "";
+                string msg = "";
                 var res = we.Response as HttpWebResponse;
                 if (res != null)
                 {
-                    var sRes = HttpWebResponseUtility.ConvertReponseToString(res);
-                    var jsRes = (JObject)JsonConvert.DeserializeObject(sRes);
+                    string sRes = HttpWebResponseUtility.ConvertReponseToString(res);
+                    var jsRes = (JObject) JsonConvert.DeserializeObject(sRes);
                     if (jsRes != null && jsRes["error_msg"] != null)
                     {
-                        msg = "Get file info {0} failed:" + jsRes["error_msg"].ToString();
+                        msg = "Get file info {0} failed:" + jsRes["error_msg"];
                     }
                 }
                 if (string.IsNullOrEmpty(msg))
@@ -445,28 +420,28 @@ namespace BaiduCloudSDK
             {
                 oldPath = PathHelper.CombineWebPath(_root, oldPath);
                 newPath = PathHelper.CombineWebPath(_root, newPath);
-                var ret = MoveInternal(oldPath,newPath);
-                Console.WriteLine("Move file from {0} to {1} succeeded-->" + ret, oldPath,newPath);
+                string ret = MoveInternal(oldPath, newPath);
+                Console.WriteLine("Move file from {0} to {1} succeeded-->" + ret, oldPath, newPath);
                 return true;
             }
             catch (WebException we)
             {
-                var msg = "";
+                string msg = "";
                 var res = we.Response as HttpWebResponse;
                 if (res != null)
                 {
-                    var sRes = HttpWebResponseUtility.ConvertReponseToString(res);
-                    var jsRes = (JObject)JsonConvert.DeserializeObject(sRes);
+                    string sRes = HttpWebResponseUtility.ConvertReponseToString(res);
+                    var jsRes = (JObject) JsonConvert.DeserializeObject(sRes);
                     if (jsRes != null && jsRes["error_msg"] != null)
                     {
-                        msg = "Move file from {0} to {1} failed:" + jsRes["error_msg"].ToString();
+                        msg = "Move file from {0} to {1} failed:" + jsRes["error_msg"];
                     }
                 }
                 if (string.IsNullOrEmpty(msg))
                 {
                     msg = "Move file from {0} to {1} failed:" + we.Message;
                 }
-                Console.WriteLine(msg, oldPath,newPath);
+                Console.WriteLine(msg, oldPath, newPath);
             }
             catch (Exception ex)
             {
@@ -474,6 +449,8 @@ namespace BaiduCloudSDK
             }
             return false;
         }
+
+
         #endregion
 
         #region Private Methods
@@ -482,11 +459,12 @@ namespace BaiduCloudSDK
         {
             string url = "https://pcs.baidu.com/rest/2.0/pcs/quota?method={0}&access_token={1}";
             url = string.Format(url, BaiduCloudCommand.GetInfoCommand, _accessToken);
-            var response = HttpWebResponseUtility.CreateGetHttpResponse(url, HttpWebResponseUtility.DefaultRequestTimeout, null, null);
+            HttpWebResponse response = HttpWebResponseUtility.CreateGetHttpResponse(url,
+                HttpWebResponseUtility.DefaultRequestTimeout, null, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
         }
 
-        private string UploadInternal(string path,byte[] fileData)
+        private string UploadInternal(string path, byte[] fileData)
         {
             string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
 
@@ -496,19 +474,21 @@ namespace BaiduCloudSDK
             //appPath = string.IsNullOrEmpty(appPath) ? appPath : appPath.Replace("\\", "/");
             url = string.Format(url, BaiduCloudCommand.UploadCommand, Uri.EscapeDataString(path), _accessToken);
             string contentType = "multipart/form-data; boundary=" + boundary + "\r\n";
-            var response = HttpWebResponseUtility.CreatePostHttpResponse(url, contentType, HttpWebResponseUtility.ConstructFileUploadPostData(Path.GetFileName(path),fileData,path,boundary), HttpWebResponseUtility.DefaultRequestTimeout, null, Encoding.UTF8, null);
+            HttpWebResponse response = HttpWebResponseUtility.CreatePostHttpResponse(url, contentType,
+                HttpWebResponseUtility.ConstructFileUploadPostData(Path.GetFileName(path), fileData, path, boundary),
+                HttpWebResponseUtility.DefaultRequestTimeout, null, Encoding.UTF8, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
-
         }
 
         private byte[] DownloadFieInternal(string pcsPath)
         {
             string url = "https://d.pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
             url = string.Format(url, BaiduCloudCommand.DownloadCommand, _accessToken, Uri.EscapeDataString(pcsPath));
-            var response = HttpWebResponseUtility.CreateGetHttpResponse(url, HttpWebResponseUtility.DefaultRequestTimeout, "", null);
+            HttpWebResponse response = HttpWebResponseUtility.CreateGetHttpResponse(url,
+                HttpWebResponseUtility.DefaultRequestTimeout, "", null);
 
             byte[] ret = null;
-            using (var stream = response.GetResponseStream())
+            using (Stream stream = response.GetResponseStream())
             {
                 if (stream != null)
                 {
@@ -530,56 +510,62 @@ namespace BaiduCloudSDK
 
         private string CreateDirectoryInternal(string pcsPath)
         {
-            var url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}";
+            string url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}";
             url = string.Format(url, BaiduCloudCommand.MakeDirCommand, _accessToken);
             var formData = new Dictionary<string, string>();
-            formData.Add("path",Uri.EscapeDataString(pcsPath));
-            var response = HttpWebResponseUtility.CreatePostHttpResponse(url, formData, HttpWebResponseUtility.DefaultRequestTimeout, null,
-                                                                         Encoding.UTF8, null);
+            formData.Add("path", Uri.EscapeDataString(pcsPath));
+            HttpWebResponse response = HttpWebResponseUtility.CreatePostHttpResponse(url, formData,
+                HttpWebResponseUtility.DefaultRequestTimeout, null,
+                Encoding.UTF8, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
         }
 
 
         private string DeleteDirectoryInternal(string pcsPath)
         {
-            var url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
+            string url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
             url = string.Format(url, BaiduCloudCommand.GetFileInfoCommand, _accessToken, pcsPath);
-            var response = HttpWebResponseUtility.CreatePostHttpResponse(url,null,
-                HttpWebResponseUtility.DefaultRequestTimeout, null,Encoding.UTF8,null);
+            HttpWebResponse response = HttpWebResponseUtility.CreatePostHttpResponse(url, null,
+                HttpWebResponseUtility.DefaultRequestTimeout, null, Encoding.UTF8, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
         }
 
         private string GetFileListInternal(string pcsPath)
         {
-            var url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
-            url = string.Format(url,BaiduCloudCommand.GetFileListCommand , _accessToken,pcsPath);
-            var response = HttpWebResponseUtility.CreateGetHttpResponse(url,
+            string url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
+            url = string.Format(url, BaiduCloudCommand.GetFileListCommand, _accessToken, pcsPath);
+            HttpWebResponse response = HttpWebResponseUtility.CreateGetHttpResponse(url,
                 HttpWebResponseUtility.DefaultRequestTimeout, null, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
         }
 
         private string GetFileInfoInternal(string pcsPath)
         {
-            var url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
+            string url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
             url = string.Format(url, BaiduCloudCommand.GetFileInfoCommand, _accessToken, pcsPath);
-            var response = HttpWebResponseUtility.CreateGetHttpResponse(url,
+            HttpWebResponse response = HttpWebResponseUtility.CreateGetHttpResponse(url,
                 HttpWebResponseUtility.DefaultRequestTimeout, null, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
         }
 
         private string MoveInternal(string oldPath, string newPath)
         {
-            var url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&from={2}&to={3}";
+            string url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&from={2}&to={3}";
             url = string.Format(url, BaiduCloudCommand.MoveCommand, _accessToken, oldPath, newPath);
-            var response = HttpWebResponseUtility.CreatePostHttpResponse(url, null,
+            HttpWebResponse response = HttpWebResponseUtility.CreatePostHttpResponse(url, null,
                 HttpWebResponseUtility.DefaultRequestTimeout, null, Encoding.UTF8, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
         }
 
+        private DateTime GetRightTime(long tmpTime)
+        {
+            DateTime dtStart = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
+            long ITime = tmpTime * 10000000;
+            var toNow = new TimeSpan(ITime);
+            return dtStart.Add(toNow);
+        }
+
+
         #endregion
-
-
-
     }
-
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using DiskAPIBase;
 
 namespace StarPan.Structure
 {
@@ -10,7 +11,7 @@ namespace StarPan.Structure
     {
         private readonly IList<FileTreeNode<T>> _children;
 
-        private readonly object _locker =new object();
+        private readonly object _locker = new object();
 
         //缓存下载文件数据
         private MemoryStream _fileDataStream;
@@ -24,13 +25,43 @@ namespace StarPan.Structure
             : this()
         {
             FileInfo = fileInfo;
+            IsDataModified = false;
         }
 
+        #region Properties
+
+        /// <summary>
+        /// 文件信息
+        /// </summary>
         public T FileInfo { get; private set; }
 
+        /// <summary>
+        /// 标志文件数据已被缓存
+        /// </summary>
+        public bool IsFileDateCached
+        {
+            get
+            {
+                return _fileDataStream != null;
+            }
+        }
 
+        /// <summary>
+        /// 标志文件数据发生改变
+        /// </summary>
+        public bool IsDataModified
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// 父节点，若本身为根节点，则为空
+        /// </summary>
         public FileTreeNode<T> Parent { get; private set; }
 
+        /// <summary>
+        /// 所在目录路径
+        /// </summary>
         public string ParentPath
         {
             get
@@ -63,11 +94,17 @@ namespace StarPan.Structure
             }
         }
 
+        /// <summary>
+        /// 路径
+        /// </summary>
         public string Path
         {
             get { return ParentPath + FileInfo.FileName; }
         }
 
+        /// <summary>
+        /// 所在层
+        /// </summary>
         public int Layer
         {
             get
@@ -83,6 +120,9 @@ namespace StarPan.Structure
             }
         }
 
+        /// <summary>
+        /// 所占空间大小
+        /// </summary>
         public long Size
         {
             get
@@ -110,10 +150,16 @@ namespace StarPan.Structure
             }
         }
 
+        /// <summary>
+        /// 是否包含子节点
+        /// </summary>
         public bool HasChild
         {
             get { return _children.Any(); }
         }
+        #endregion
+
+        #region Public Methods
 
         public object Clone()
         {
@@ -184,7 +230,13 @@ namespace StarPan.Structure
             FileInfo.FileName = newName;
         }
 
-        public uint RequestFileData(long offset, byte[] buffer)
+        /// <summary>
+        /// 请求文件数据
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
+        public uint ReadFileData(long offset, byte[] buffer)
         {
             if (FileInfo.IsDir)
             {
@@ -208,21 +260,120 @@ namespace StarPan.Structure
                 }
                 if (_fileDataStream != null)
                 {
-                    Console.WriteLine("Request file data-->>file:{0} buffer:{1} offset:{2}",FileInfo.FileName,buffer.Length,offset);
-                    Console.WriteLine("stream length:{0}  stream position:{1}", _fileDataStream.Length, _fileDataStream.Position);
-                    int iResult = _fileDataStream.Read(buffer, 0, buffer.Length);
-                    Console.WriteLine("Read bytes:{0}",iResult);
-                    if (!_fileDataStream.CanRead)
+                    Console.WriteLine("Request file data-->>file:{0} buffer:{1} offset:{2}", FileInfo.FileName,
+                        buffer.Length, offset);
+                    Console.WriteLine("stream length:{0}  stream position:{1}", _fileDataStream.Length,
+                        _fileDataStream.Position);
+                    if (_fileDataStream.Position != offset)
                     {
-                        //读取完毕,释放内存
-                        _fileDataStream.Dispose();
-                        _fileDataStream = null;
+                        _fileDataStream.Seek(offset, SeekOrigin.Begin);
                     }
-                    return (uint)iResult;
+                    int iResult = _fileDataStream.Read(buffer, 0, buffer.Length);
+                    Console.WriteLine("Read bytes:{0}", iResult);
+                    return (uint) iResult;
                 }
             }
             return 0;
 
         }
+
+        /// <summary>
+        /// 写入文件数据
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
+        public uint WriteFileData(long offset, byte[] buffer)
+        {
+            if (FileInfo.IsDir)
+            {
+                return 0;
+            }
+            lock (_locker)
+            {
+                if (_fileDataStream == null)
+                {
+                    //初始化文件缓存
+                    _fileDataStream = new MemoryStream();
+                }
+
+                Console.WriteLine("Write file data-->>file:{0} buffer:{1} offset:{2}", FileInfo.FileName,
+                    buffer.Length, offset);
+                Console.WriteLine("stream length:{0}  stream position:{1}", _fileDataStream.Length,
+                    _fileDataStream.Position);
+                if (_fileDataStream.Position != offset)
+                {
+                    _fileDataStream.Seek(offset, SeekOrigin.Begin);
+                }
+                _fileDataStream.Write(buffer, 0, buffer.Length);
+
+                Console.WriteLine("Write bytes:{0}", buffer.Length);
+                Console.WriteLine("stream length:{0}  stream position:{1}", _fileDataStream.Length,
+                    _fileDataStream.Position);
+                //标志文件数据发生改变
+                if (!IsDataModified)
+                {
+                    IsDataModified = true;
+                }
+
+                return (uint) buffer.Length;
+
+            }
+            return 0;
+
+        }
+
+        /// <summary>
+        /// 释放文件数据
+        /// </summary>
+        public void ReleaseFileData()
+        {
+            lock (_locker)
+            {
+                if (_fileDataStream != null)
+                {
+                    if (IsDataModified)
+                    {
+                        //更改文件大小
+                        FileInfo.Size = _fileDataStream.Length;
+                        ICloudDiskAccessUtility utility = null;
+                        bool isNew = false;
+                        //若为新文件，需要先指定网盘
+                        if (string.IsNullOrEmpty(FileInfo.Source))
+                        {
+                            isNew = true;
+                            //获取剩余空间最大网盘
+                            utility = CloudDiskManager.Instance.GetCloudDisk(list=>list.OrderBy(disk=>disk.GetFreeSpace()).Last());
+                            FileInfo.Source = utility != null ? utility.Name : "";
+                        }
+                        else
+                        {
+                            utility = CloudDiskManager.Instance.GetCloudDisk(FileInfo.Source);
+                        }
+
+                        if (utility != null)
+                        {
+                            //上传文件
+                            if (!isNew)
+                            {
+                                if (utility.GetFileInfo(Path) != null)
+                                {
+                                    utility.DeleteFile(Path);
+                                }                                
+                            }
+                            utility.UploadFile(Path, _fileDataStream.ToArray());
+
+                        }
+                    }
+                    //文件修改标志位复位
+                    IsDataModified = false;
+                    //清空文件缓存
+                    _fileDataStream.Dispose();
+                    _fileDataStream = null;
+                }
+            }
+
+        }
+        #endregion
     }
 }

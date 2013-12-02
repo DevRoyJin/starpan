@@ -107,10 +107,18 @@ namespace StarPan
         {
             string source = "";
             FileTreeNode<PathInfo> parentNode = _fileNodeDictionay[path];
+            //父目录不存在
             if (parentNode == null)
             {
                 return;
             }
+            //重名
+            if (parentNode.GetChildrenData().Any(d => d.FileName == info.FileName))
+            {
+                return;
+            }
+
+            //文件夹不指定网盘
             if (info.Attributes == FileAttributes.Directory)
             {
                 source = null;
@@ -128,9 +136,26 @@ namespace StarPan
             };
             FileTreeNode<PathInfo> fileTreeNode = parentNode.AddChild(node);
             RegisterTreeNdoe(fileTreeNode);
+
+            //执行网盘操作
+            if (node.IsDir)//文件夹
+            {
+                foreach (var utility in CloudDiskManager.Instance.GetAllCloudDisk())
+                {
+                    utility.CreateDirectory(path);
+                }
+            }
+            else //文件
+            {
+                //获取剩余空间最大网盘
+                var utility = CloudDiskManager.Instance.GetCloudDisk(list => list.OrderBy(disk => disk.GetFreeSpace()).Last());
+                utility.UploadFile(path, new byte[]{});
+
+            }
+
         }
 
-        public void RmoveNode(string path)
+        public void RemoveNode(string path)
         {
             FileTreeNode<PathInfo> node = _fileNodeDictionay[path];
             if (node == null)
@@ -138,26 +163,78 @@ namespace StarPan
 
             UnRegisterTreeNode(node);
             node.RemoveSelf();
+
+            //执行网盘操作
+            if (string.IsNullOrEmpty(node.FileInfo.Source))//文件夹
+            {
+                foreach (var utility in CloudDiskManager.Instance.GetAllCloudDisk())
+                {
+                    if (utility.GetFileInfo(path) != null)
+                    {
+                        utility.DeleteDirectory(path);
+                    }
+                }
+            }
+            else //文件
+            {
+                var utility = CloudDiskManager.Instance.GetCloudDisk(node.FileInfo.Source);
+                utility.DeleteFile(path);
+
+            }
+            
         }
 
         public void MoveNode(string curPath, string destPath)
         {
             FileTreeNode<PathInfo> node = _fileNodeDictionay[curPath];
-            FileTreeNode<PathInfo> destNode = _fileNodeDictionay[destPath];
-            if (node == null || destNode == null || !destNode.FileInfo.IsDir)
+            var sourceFolder = PathHelper.GetParentDirectory(curPath);
+            var sourceFileName = PathHelper.GetFileName(curPath);
+            var destFolder = PathHelper.GetParentDirectory(destPath);
+            var destFileName = PathHelper.GetFileName(destPath);
+
+            FileTreeNode<PathInfo> destFolderNode = _fileNodeDictionay[destFolder];
+            if (node == null || destFolderNode == null || !destFolderNode.FileInfo.IsDir)
             {
                 return;
             }
-            if (destNode.GetChildren().Any(n => n.FileInfo.FileName == node.FileInfo.FileName))
+            if (destFolderNode.GetChildren().Any(n => n.FileInfo.FileName == destFileName))
             {
                 Console.WriteLine("There is file/folder with the same name {0} in {1}", node.FileInfo.FileName,
-                    destNode.Path);
+                    destFolderNode.Path);
                 return;
             }
             UnRegisterTreeNode(node);
-            node.RemoveSelf();
-            node = destNode.AddChild(node);
+            //移动
+            if (sourceFolder != destFolder)
+            {
+                node.RemoveSelf();
+                node = destFolderNode.AddChild(node);
+            }
+            //更名
+            if (sourceFileName != destFileName)
+            {
+                node.Rename(destFileName);
+            }
             RegisterTreeNdoe(node);
+
+            //执行网盘操作
+            if (string.IsNullOrEmpty(node.FileInfo.Source))//文件夹
+            {
+                foreach (var utility in CloudDiskManager.Instance.GetAllCloudDisk())
+                {
+                    if (utility.GetFileInfo(curPath) != null)
+                    {
+                        utility.Move(curPath, destPath);
+                    }
+                }
+            }
+            else //文件
+            {
+                var utility = CloudDiskManager.Instance.GetCloudDisk(node.FileInfo.Source);
+                utility.Move(curPath, destPath);
+                
+            }
+
         }
 
         public void CopyNode(string curPath, string destPath)
