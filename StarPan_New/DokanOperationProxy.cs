@@ -23,9 +23,9 @@ namespace StarPan
             {
                 FileName = "/",
                 IsDir = true,
-                CreationTime = new DateTime(0),
-                LastAccessTime = new DateTime(0),
-                LastWriteTime = new DateTime(0),
+                CreationTime = DateTime.Now,
+                LastAccessTime = DateTime.Now,
+                LastWriteTime = DateTime.Now,
                 Size = 0,
                 Source = null
             };
