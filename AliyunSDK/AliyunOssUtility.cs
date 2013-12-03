@@ -14,7 +14,8 @@ namespace AliyunSDK
     public class AliyunOssUtility : ICloudDiskAccessUtility
     {
         private const string EndPoint = "http://oss.aliyuncs.com";
-        private string BucketName;
+        private readonly string _bucketName;
+        private readonly long _quota = (long) (4*Math.Pow(1024, 4));//4T
 
         private readonly string _name;
         private readonly string _root;
@@ -32,7 +33,7 @@ namespace AliyunSDK
         {
             _name = name;
             _root = root;
-            this.BucketName = bucketName;
+            this._bucketName = bucketName;
             //代理
             if (WebUtiltiy.IsProxyEnable)
             {
@@ -96,14 +97,14 @@ namespace AliyunSDK
 
         public long GetQuota()
         {
-            return ~(1<<31);//2G
+            return _quota; 
         }
 
         public long GetUsedSpace()
         {
             try
             {
-                return _ossClient.ListObjects(BucketName).ObjectSummaries.Sum(o => o.Size);
+                return _ossClient.ListObjects(_bucketName).ObjectSummaries.Sum(o => o.Size);
             }
             catch (OssException ossEx)
             {
@@ -128,7 +129,7 @@ namespace AliyunSDK
                 path = PathHelper.CombineWebPath(_root, path);
                 var metaData = new ObjectMetadata();
                 metaData.ContentEncoding = "utf-8";
-                _ossClient.PutObject(BucketName, path, new MemoryStream(fileData), metaData);
+                _ossClient.PutObject(_bucketName, path, new MemoryStream(fileData), metaData);
                 return true;
             }
             catch (OssException ossEx)
@@ -147,7 +148,7 @@ namespace AliyunSDK
             try
             {
                 path = PathHelper.CombineWebPath(_root, path);
-                var getObjReq = new GetObjectRequest(BucketName, path);
+                var getObjReq = new GetObjectRequest(_bucketName, path);
                 using (var stream = new MemoryStream())
                 {
                     _ossClient.GetObject(getObjReq,stream);
@@ -174,8 +175,12 @@ namespace AliyunSDK
             {
                 path = PathHelper.CombineWebPath(_root, path);
                 var metaData = new ObjectMetadata();
+                if (!path.EndsWith("/"))
+                {
+                    path += "/";
+                }
                 metaData.ContentType = "application/x-www-form-urlencoded";
-                _ossClient.PutObject(BucketName, path, new MemoryStream(), metaData);
+                _ossClient.PutObject(_bucketName, path, new MemoryStream(), metaData);
                 return true;
             }
             catch (OssException ossEx)
@@ -219,7 +224,7 @@ namespace AliyunSDK
             try
             {
                 path = PathHelper.CombineWebPath(_root, path);
-                _ossClient.DeleteObject(BucketName,path);
+                _ossClient.DeleteObject(_bucketName,path);
                 return true;
             }
             catch (OssException ossEx)
@@ -238,7 +243,7 @@ namespace AliyunSDK
             try
             {
                 dirPath = PathHelper.CombineWebPath(_root, dirPath);
-                var oList = _ossClient.ListObjects(BucketName, dirPath);
+                var oList = _ossClient.ListObjects(_bucketName, dirPath);
                 return oList.ObjectSummaries.Where(oos => oos.Key != dirPath &&
                     (!oos.Key.Substring(dirPath.Length).Contains("/") || oos.Key.Substring(dirPath.Length).Split('/')[1] == ""))
                     .Select(oos => new CloudFileInfo
@@ -269,7 +274,7 @@ namespace AliyunSDK
             try
             {
                 path = PathHelper.CombineWebPath(_root, path);
-                var listObjReq = new ListObjectsRequest(BucketName);
+                var listObjReq = new ListObjectsRequest(_bucketName);
                 listObjReq.Prefix = path;
                 listObjReq.MaxKeys = 1;
 
@@ -305,12 +310,12 @@ namespace AliyunSDK
                 path = PathHelper.CombineWebPath(_root, path);
                 newPath = PathHelper.CombineWebPath(_root, newPath);
                 //Copy first
-                var copyReq = new CopyObjectRequest(BucketName, path, BucketName, newPath);
+                var copyReq = new CopyObjectRequest(_bucketName, path, _bucketName, newPath);
                 var copyResult = _ossClient.CopyObject(copyReq);
                 if (copyResult != null)
                 {
                     //copy succeed, delete the origin object
-                    _ossClient.DeleteObject(BucketName,path);
+                    _ossClient.DeleteObject(_bucketName,path);
                     return true;
                 }
                 
@@ -334,7 +339,7 @@ namespace AliyunSDK
             {
                 _filesFroDelStack.Clear();
             }
-            var oList = _ossClient.ListObjects(BucketName, dirPath);//路径下所有文件
+            var oList = _ossClient.ListObjects(_bucketName, dirPath);//路径下所有文件
             foreach (var obj in oList.ObjectSummaries)
             {
                 if (obj.Key.EndsWith("/"))
@@ -343,14 +348,14 @@ namespace AliyunSDK
                 }
                 else
                 {
-                    _ossClient.DeleteObject(BucketName,obj.Key);
+                    _ossClient.DeleteObject(_bucketName,obj.Key);
                 }
             }
 
             while (_filesFroDelStack.Count>0)
             {
                 var delKey = _filesFroDelStack.Pop();
-                _ossClient.DeleteObject(BucketName, delKey);
+                _ossClient.DeleteObject(_bucketName, delKey);
             }
 
         }

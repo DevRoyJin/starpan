@@ -71,6 +71,8 @@ namespace BaiduCloudSDK
         public long GetQuota()
         {
             string quotaJson = GetQuotaDataInternal();
+            Console.WriteLine("Baidu : Got reponse-->>" + quotaJson);
+            Console.WriteLine("Baidu : GetQuota succeeded");
             if (quotaJson == null)
             {
                 return 0;
@@ -140,6 +142,8 @@ namespace BaiduCloudSDK
                 }
                 //一般文件上传
                 json = UploadInternal(path, fileData);
+                Console.WriteLine("Baidu : Got reponse-->>" + json);
+                Console.WriteLine("Baidu : UploadFile {0} succeeded", path);
                 var jo = (JObject) JsonConvert.DeserializeObject(json);
                 if (jo == null)
                 {
@@ -215,8 +219,11 @@ namespace BaiduCloudSDK
             try
             {
                 pcsPath = PathHelper.CombineWebPath(_root, pcsPath);
+                if (GetFileInfo(pcsPath) != null)
+                    return true;
                 string ret = CreateDirectoryInternal(pcsPath);
-                Console.WriteLine("Make dir succeeds-->" + ret);
+                Console.WriteLine("Baidu : Got reponse-->>" + ret);
+                Console.WriteLine("Baidu : CreateDirectory {0} succeeded", pcsPath);
                 return true;
             }
             catch (WebException we)
@@ -252,7 +259,8 @@ namespace BaiduCloudSDK
             {
                 pcsPath = PathHelper.CombineWebPath(_root, pcsPath);
                 string ret = DeleteDirectoryInternal(pcsPath);
-                Console.WriteLine("Delete directory {0} succeeded-->" + ret, pcsPath);
+                Console.WriteLine("Baidu : Got reponse-->>" + ret);
+                Console.WriteLine("Baidu : DeleteDirectory {0} succeeded", pcsPath);
                 return true;
             }
             catch (WebException we)
@@ -287,7 +295,8 @@ namespace BaiduCloudSDK
             {
                 pcsPath = PathHelper.CombineWebPath(_root, pcsPath);
                 string ret = DeleteDirectoryInternal(pcsPath);
-                Console.WriteLine("Delete file {0} succeeded-->" + ret, pcsPath);
+                Console.WriteLine("Baidu : Got reponse-->>" + ret);
+                Console.WriteLine("Baidu : Delete file {0} succeeded", pcsPath);
                 return true;
             }
             catch (WebException we)
@@ -322,6 +331,7 @@ namespace BaiduCloudSDK
             {
                 dirPath = PathHelper.CombineWebPath(_root, dirPath);
                 string ret = GetFileListInternal(dirPath);
+                Console.WriteLine("Baidu :Got reponse-->>" + ret);
                 var responseJo =
                     (JObject) JsonConvert.DeserializeObject(ret);
                 var sFileList = JsonConvert.DeserializeObject<List<JObject>>(responseJo["list"].ToString());
@@ -339,7 +349,7 @@ namespace BaiduCloudSDK
                         IsDir = isDir
                     };
                 }).ToList();
-
+                Console.WriteLine("Baidu :GetFileList of dir {0}", dirPath);
                 return fileList;
             }
             catch (WebException we)
@@ -374,11 +384,13 @@ namespace BaiduCloudSDK
             {
                 path = PathHelper.CombineWebPath(_root, path);
                 string ret = GetFileInfoInternal(path);
+                Console.WriteLine("Baidu :Got reponse-->>" + ret);
                 var responseJo =
                     (JObject) JsonConvert.DeserializeObject(ret);
                 var sFileList = JsonConvert.DeserializeObject<List<JObject>>(responseJo["list"].ToString());
                 JObject jo = sFileList[0];
                 bool isDir = jo["isdir"].ToObject<int>() == 1;
+                Console.WriteLine("Baidu :GetFileInfo of file {0}", path);
                 return new CloudFileInfo
                 {
                     Path = jo["path"].ToString().Substring(_root.Length) + (isDir ? "/" : ""),
@@ -420,9 +432,16 @@ namespace BaiduCloudSDK
             {
                 oldPath = PathHelper.CombineWebPath(_root, oldPath);
                 newPath = PathHelper.CombineWebPath(_root, newPath);
+                var newFolder = PathHelper.GetParentDirectory(newPath);
+
+                CreateDirectoryInternal(newFolder);              
                 string ret = MoveInternal(oldPath, newPath);
-                Console.WriteLine("Move file from {0} to {1} succeeded-->" + ret, oldPath, newPath);
+                Console.WriteLine("Baidu: Got resposne-->>" + ret);
+                Console.WriteLine("Baidu :Move file from {0} to {1} ", oldPath, newPath);
+
                 return true;
+                
+
             }
             catch (WebException we)
             {
@@ -523,9 +542,11 @@ namespace BaiduCloudSDK
 
         private string DeleteDirectoryInternal(string pcsPath)
         {
-            string url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
-            url = string.Format(url, BaiduCloudCommand.GetFileInfoCommand, _accessToken, pcsPath);
-            HttpWebResponse response = HttpWebResponseUtility.CreatePostHttpResponse(url, null,
+            string url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}";
+            url = string.Format(url, BaiduCloudCommand.DeleteCommand, _accessToken);
+            var formData = new Dictionary<string, string>();
+            formData.Add("path", Uri.EscapeDataString(pcsPath));
+            HttpWebResponse response = HttpWebResponseUtility.CreatePostHttpResponse(url, formData,
                 HttpWebResponseUtility.DefaultRequestTimeout, null, Encoding.UTF8, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
         }
@@ -533,7 +554,7 @@ namespace BaiduCloudSDK
         private string GetFileListInternal(string pcsPath)
         {
             string url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
-            url = string.Format(url, BaiduCloudCommand.GetFileListCommand, _accessToken, pcsPath);
+            url = string.Format(url, BaiduCloudCommand.GetFileListCommand, _accessToken, Uri.EscapeDataString(pcsPath));
             HttpWebResponse response = HttpWebResponseUtility.CreateGetHttpResponse(url,
                 HttpWebResponseUtility.DefaultRequestTimeout, null, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
@@ -542,7 +563,7 @@ namespace BaiduCloudSDK
         private string GetFileInfoInternal(string pcsPath)
         {
             string url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
-            url = string.Format(url, BaiduCloudCommand.GetFileInfoCommand, _accessToken, pcsPath);
+            url = string.Format(url, BaiduCloudCommand.GetFileInfoCommand, _accessToken, Uri.EscapeDataString(pcsPath));
             HttpWebResponse response = HttpWebResponseUtility.CreateGetHttpResponse(url,
                 HttpWebResponseUtility.DefaultRequestTimeout, null, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
@@ -550,9 +571,12 @@ namespace BaiduCloudSDK
 
         private string MoveInternal(string oldPath, string newPath)
         {
-            string url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&from={2}&to={3}";
-            url = string.Format(url, BaiduCloudCommand.MoveCommand, _accessToken, oldPath, newPath);
-            HttpWebResponse response = HttpWebResponseUtility.CreatePostHttpResponse(url, null,
+            string url = "https://pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}";
+            url = string.Format(url, BaiduCloudCommand.MoveCommand, _accessToken);
+            var formData = new Dictionary<string, string>();
+            formData.Add("from", Uri.EscapeDataString(oldPath));
+            formData.Add("to", Uri.EscapeDataString(newPath));
+            HttpWebResponse response = HttpWebResponseUtility.CreatePostHttpResponse(url, formData,
                 HttpWebResponseUtility.DefaultRequestTimeout, null, Encoding.UTF8, null);
             return HttpWebResponseUtility.ConvertReponseToString(response);
         }

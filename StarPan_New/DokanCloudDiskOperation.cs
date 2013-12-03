@@ -272,7 +272,9 @@ namespace StarPan
             {
                 return -DokanNet.ERROR_FILE_NOT_FOUND;
             }
-            //TODO:实现文件数据上传
+
+            var node = _operationProxy.GetNode(path);
+            writtenBytes = node.WriteFileData(offset, buffer);
 
 
             return DokanNet.DOKAN_SUCCESS;

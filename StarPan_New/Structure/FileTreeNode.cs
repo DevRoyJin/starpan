@@ -291,11 +291,7 @@ namespace StarPan.Structure
             }
             lock (_locker)
             {
-                if (_fileDataStream == null)
-                {
-                    //初始化文件缓存
-                    _fileDataStream = new MemoryStream();
-                }
+                _fileDataStream = new MemoryStream();
 
                 Console.WriteLine("Write file data-->>file:{0} buffer:{1} offset:{2}", FileInfo.FileName,
                     buffer.Length, offset);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using AliyunSDK;
@@ -147,39 +148,39 @@ namespace CloudDiskTest
 
             //download
             #region Download
-            //Console.WriteLine("Please input the file path you want to download from your bucket:");
-            //string path = Console.ReadLine();
-            //byte[] fileData;
-            //if (AliyunOssUtility.Instance.DownloadFile(path, out fileData))
-            //{
-            //    var fileName = "";
-            //    if (!string.IsNullOrEmpty(path))
-            //    {
-            //        var array = path.Split('/');
-            //        fileName = array[array.Length - 1];
-            //    }
-            //    if (fileData != null && fileData.Length > 0)
-            //    {
-            //        string localPath = Path.Combine(@"d:\apps\", fileName);
-            //        if (File.Exists(localPath))
-            //        {
-            //            File.Delete(localPath);
-            //        }
-            //        var fs = new FileStream(localPath, FileMode.CreateNew, FileAccess.ReadWrite);
-            //        fs.BeginWrite(fileData, 0, fileData.Length, ar =>
-            //            {
-            //                fs.EndWrite(ar);
-            //                fs.Close();
-            //                fs = null;
-            //            }, localPath);
-            //    }
+            Console.WriteLine("Please input the file path you want to download from your bucket:");
+            string path = Console.ReadLine();
+            byte[] fileData;
+            if (AliyunOssUtility.Instance.DownloadFile(path, out fileData))
+            {
+                var fileName = "";
+                if (!string.IsNullOrEmpty(path))
+                {
+                    var array = path.Split('/');
+                    fileName = array[array.Length - 1];
+                }
+                if (fileData != null && fileData.Length > 0)
+                {
+                    string localPath = Path.Combine(@"d:\apps\", fileName);
+                    if (File.Exists(localPath))
+                    {
+                        File.Delete(localPath);
+                    }
+                    var fs = new FileStream(localPath, FileMode.CreateNew, FileAccess.ReadWrite);
+                    fs.BeginWrite(fileData, 0, fileData.Length, ar =>
+                        {
+                            fs.EndWrite(ar);
+                            fs.Close();
+                            fs = null;
+                        }, localPath);
+                }
 
-            //    Console.WriteLine("Download {0} succeeded.", path);
-            //}
-            //else
-            //{
-            //    Console.WriteLine("Download {0} failed.", path);
-            //}
+                Console.WriteLine("Download {0} succeeded.", path);
+            }
+            else
+            {
+                Console.WriteLine("Download {0} failed.", path);
+            }
             #endregion
 
             ////mkdir
@@ -210,15 +211,15 @@ namespace CloudDiskTest
             //}
 
 
-            string folderPath = "test/";
-            if (AliyunOssUtility.Instance.DeleteDirectory(folderPath))
-            {
-                Console.WriteLine("Delete folder {0} succeeded.", folderPath);
-            }
-            else
-            {
-                Console.WriteLine("Delete folder {0} failed.", folderPath);
-            }
+            //string folderPath = "test/";
+            //if (AliyunOssUtility.Instance.DeleteDirectory(folderPath))
+            //{
+            //    Console.WriteLine("Delete folder {0} succeeded.", folderPath);
+            //}
+            //else
+            //{
+            //    Console.WriteLine("Delete folder {0} failed.", folderPath);
+            //}
             #endregion
 
             //get file list
