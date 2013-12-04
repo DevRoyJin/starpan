@@ -79,6 +79,17 @@ namespace StarPan
         }
 
         /// <summary>
+        ///     Returns the filename-part of a string that contains a full path,
+        ///     similar to Path.GetFileName()
+        /// </summary>
+        /// <param name="sourcePath"></param>
+        /// <returns></returns>
+        internal static string GetFileExtension(this string sourcePath)
+        {
+            return sourcePath.Substring(sourcePath.LastIndexOf('.') + 1);
+        }
+
+        /// <summary>
         ///     Used to retrieve the first available driveletter
         /// </summary>
         /// <returns>A driveletter that's not in use yet</returns>

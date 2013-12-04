@@ -28,6 +28,17 @@ namespace StarPan.Structure
         public bool IsDir { get; set; }
 
 
+        public void RecordReadTime()
+        {
+            this.LastAccessTime = DateTime.Now;
+        }
+
+        public void RecordWriteTime()
+        {
+            LastAccessTime = DateTime.Now;
+            LastWriteTime = DateTime.Now;
+        }
+
         public FileInformation ToFileInformation()
         {
             return new FileInformation

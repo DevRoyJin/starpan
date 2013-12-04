@@ -1,4 +1,6 @@
-﻿namespace StarPan.Structure
+﻿using System;
+
+namespace StarPan.Structure
 {
     public interface IPathInfo
     {
@@ -13,5 +15,8 @@
 
         string Source { get; set; }
 
+        void RecordReadTime();
+
+        void RecordWriteTime();
     }
 }

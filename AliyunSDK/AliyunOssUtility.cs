@@ -3,26 +3,25 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using Aliyun.OpenServices;
+using Aliyun.OpenServices.OpenStorageService;
 using DiskAPIBase;
 using DiskAPIBase.File;
-using Aliyun.OpenServices.OpenStorageService;
 
 namespace AliyunSDK
 {
     public class AliyunOssUtility : ICloudDiskAccessUtility
     {
         private const string EndPoint = "http://oss.aliyuncs.com";
+        private static AliyunOssUtility _utility;
         private readonly string _bucketName;
-        private readonly long _quota = (long) (4*Math.Pow(1024, 4));//4T
+        private readonly Stack<string> _filesFroDelStack = new Stack<string>();
 
         private readonly string _name;
-        private readonly string _root;
 
         private readonly OssClient _ossClient;
-
-        private Stack<string> _filesFroDelStack = new Stack<string>();
+        private readonly long _quota = (long) (4*Math.Pow(1024, 4)); //4T
+        private readonly string _root;
 
         public AliyunOssUtility()
             : this("app/", "aliyun", "Y8HLBRjlRgKp5SXV", "6nRLip0xiul2CZVsTDe36TYoqD09YT", "localclouddisk")
@@ -33,20 +32,20 @@ namespace AliyunSDK
         {
             _name = name;
             _root = root;
-            this._bucketName = bucketName;
+            _bucketName = bucketName;
             //代理
             if (WebUtiltiy.IsProxyEnable)
             {
-                var proxy = WebRequest.GetSystemWebProxy();
+                IWebProxy proxy = WebRequest.GetSystemWebProxy();
                 var clientConfig = new ClientConfiguration();
                 var edUri = new Uri(EndPoint);
-                var proxyUri = proxy.GetProxy(edUri);
+                Uri proxyUri = proxy.GetProxy(edUri);
 
                 clientConfig.ProxyHost = proxyUri.Host;
                 clientConfig.ProxyPort = proxyUri.Port;
                 if (proxy.Credentials != null)
                 {
-                    var credential = proxy.Credentials.GetCredential(edUri, "Basic");
+                    NetworkCredential credential = proxy.Credentials.GetCredential(edUri, "Basic");
                     if (credential != null)
                     {
                         clientConfig.ProxyUserName = credential.UserName;
@@ -64,11 +63,8 @@ namespace AliyunSDK
             else
             {
                 _ossClient = new OssClient(EndPoint, key, secret);
-
             }
         }
-
-        private static AliyunOssUtility _utility;
 
         public static AliyunOssUtility Instance
         {
@@ -84,6 +80,7 @@ namespace AliyunSDK
         }
 
         #region [IDiskUtility members]
+
         public string Name
         {
             get { return _name; }
@@ -94,10 +91,12 @@ namespace AliyunSDK
             get { return _root; }
         }
 
+        public bool SupportPartialDownload { get { return false; } }
+
 
         public long GetQuota()
         {
-            return _quota; 
+            return _quota;
         }
 
         public long GetUsedSpace()
@@ -116,19 +115,18 @@ namespace AliyunSDK
             }
             return -1;
         }
-        
+
         public long GetFreeSpace()
         {
             return GetQuota() - GetUsedSpace();
         }
 
-        public bool UploadFile(string path,byte[] fileData)
+        public bool UploadFile(string path, byte[] fileData)
         {
             try
             {
                 path = PathHelper.CombineWebPath(_root, path);
-                var metaData = new ObjectMetadata();
-                metaData.ContentEncoding = "utf-8";
+                var metaData = new ObjectMetadata {ContentEncoding = "utf-8"};
                 _ossClient.PutObject(_bucketName, path, new MemoryStream(fileData), metaData);
                 return true;
             }
@@ -151,15 +149,14 @@ namespace AliyunSDK
                 var getObjReq = new GetObjectRequest(_bucketName, path);
                 using (var stream = new MemoryStream())
                 {
-                    _ossClient.GetObject(getObjReq,stream);
+                    _ossClient.GetObject(getObjReq, stream);
                     fileData = stream.ToArray();
                     return true;
                 }
-                
             }
             catch (OssException ossEx)
             {
-                Console.WriteLine("OSS operation failed, error code:{0},error msg:{1} ",ossEx.ErrorCode, ossEx.Message);
+                Console.WriteLine("OSS operation failed, error code:{0},error msg:{1} ", ossEx.ErrorCode, ossEx.Message);
             }
             catch (Exception exception)
             {
@@ -167,6 +164,11 @@ namespace AliyunSDK
             }
             fileData = null;
             return false;
+        }
+
+        public bool DownloadPartialFile(string path, int offset, int length, out byte[] fileData)
+        {
+            throw new NotImplementedException();
         }
 
         public bool CreateDirectory(string path)
@@ -186,15 +188,12 @@ namespace AliyunSDK
             catch (OssException ossEx)
             {
                 Console.WriteLine("OSS operation failed, error code:{0},error msg:{1} ", ossEx.ErrorCode, ossEx.Message);
-                
             }
             catch (Exception exception)
-            {          
-                Console.WriteLine("Generic error: {0}",exception.Message);
+            {
+                Console.WriteLine("Generic error: {0}", exception.Message);
             }
             return false;
-
-
         }
 
         public bool DeleteDirectory(string path)
@@ -210,7 +209,6 @@ namespace AliyunSDK
             catch (OssException ossEx)
             {
                 Console.WriteLine("OSS operation failed, error code:{0},error msg:{1} ", ossEx.ErrorCode, ossEx.Message);
-
             }
             catch (Exception exception)
             {
@@ -224,7 +222,7 @@ namespace AliyunSDK
             try
             {
                 path = PathHelper.CombineWebPath(_root, path);
-                _ossClient.DeleteObject(_bucketName,path);
+                _ossClient.DeleteObject(_bucketName, path);
                 return true;
             }
             catch (OssException ossEx)
@@ -238,25 +236,29 @@ namespace AliyunSDK
             return false;
         }
 
-        public IList<DiskAPIBase.File.CloudFileInfo> GetFileList(string dirPath)
+        public IList<CloudFileInfo> GetFileList(string dirPath)
         {
             try
             {
                 dirPath = PathHelper.CombineWebPath(_root, dirPath);
-                var oList = _ossClient.ListObjects(_bucketName, dirPath);
+                ObjectListing oList = _ossClient.ListObjects(_bucketName, dirPath);
                 return oList.ObjectSummaries.Where(oos => oos.Key != dirPath &&
-                    (!oos.Key.Substring(dirPath.Length).Contains("/") || oos.Key.Substring(dirPath.Length).Split('/')[1] == ""))
+                                                          (!oos.Key.Substring(dirPath.Length).Contains("/") ||
+                                                           oos.Key.Substring(dirPath.Length).Split('/')[1] == ""))
                     .Select(oos => new CloudFileInfo
                     {
                         //Path = oos.Key.Substring(_root.Length),
                         //remove "/" at the end of directory path
-                        Path = oos.Key.Substring(_root.Length, oos.Key.EndsWith("/") ? oos.Key.Length - _root.Length - 1 : oos.Key.Length - _root.Length),
+                        Path =
+                            oos.Key.Substring(_root.Length,
+                                oos.Key.EndsWith("/")
+                                    ? oos.Key.Length - _root.Length - 1
+                                    : oos.Key.Length - _root.Length),
                         CreateTime = oos.LastModified.Ticks,
                         ModifiyTime = oos.LastModified.Ticks,
                         IsDir = oos.Key.EndsWith("/"),
                         Size = oos.Size
                     }).ToList();
-
             }
             catch (OssException ossEx)
             {
@@ -275,17 +277,15 @@ namespace AliyunSDK
             {
                 path = PathHelper.CombineWebPath(_root, path);
                 Console.WriteLine("Aliyun: GetFileInfo {0}", path);
-                var listObjReq = new ListObjectsRequest(_bucketName);
-                listObjReq.Prefix = path;
-                listObjReq.MaxKeys = 1;
-
-                var oList = _ossClient.ListObjects(listObjReq);
+                var listObjReq = new ListObjectsRequest(_bucketName) {Prefix = path, MaxKeys = 1};
+                ObjectListing oList = _ossClient.ListObjects(listObjReq);
                 //var objSummary = oList.ObjectSummaries.FirstOrDefault(oos => oos.Key == path);
                 //若请求的是文件夹，则需要在路径最后加上“/”
-                var objSummary = oList.ObjectSummaries.FirstOrDefault(oos => oos.Key == path || oos.Key==path+"/");
+                OssObjectSummary objSummary =
+                    oList.ObjectSummaries.FirstOrDefault(oos => oos.Key == path || oos.Key == path + "/");
                 if (objSummary != null)
                 {
-                    return new CloudFileInfo()
+                    return new CloudFileInfo
                     {
                         Path = objSummary.Key.Substring(_root.Length),
                         CreateTime = objSummary.LastModified.Ticks,
@@ -307,7 +307,7 @@ namespace AliyunSDK
         }
 
         public bool Move(string path, string newPath)
-        {         
+        {
             try
             {
                 path = PathHelper.CombineWebPath(_root, path);
@@ -315,14 +315,13 @@ namespace AliyunSDK
                 Console.WriteLine("Aliyun: Move from {0} to {1}", path, newPath);
                 //Copy first
                 var copyReq = new CopyObjectRequest(_bucketName, path, _bucketName, newPath);
-                var copyResult = _ossClient.CopyObject(copyReq);
+                CopyObjectResult copyResult = _ossClient.CopyObject(copyReq);
                 if (copyResult != null)
                 {
                     //copy succeed, delete the origin object
-                    _ossClient.DeleteObject(_bucketName,path);
+                    _ossClient.DeleteObject(_bucketName, path);
                     return true;
                 }
-                
             }
             catch (OssException ossEx)
             {
@@ -333,8 +332,8 @@ namespace AliyunSDK
                 Console.WriteLine("Generic error: {0}", exception.Message);
             }
             return false;
-
         }
+
         #endregion
 
         private void DeleteDirectoryInternal(string dirPath)
@@ -343,8 +342,8 @@ namespace AliyunSDK
             {
                 _filesFroDelStack.Clear();
             }
-            var oList = _ossClient.ListObjects(_bucketName, dirPath);//路径下所有文件
-            foreach (var obj in oList.ObjectSummaries)
+            ObjectListing oList = _ossClient.ListObjects(_bucketName, dirPath); //路径下所有文件
+            foreach (OssObjectSummary obj in oList.ObjectSummaries)
             {
                 if (obj.Key.EndsWith("/"))
                 {
@@ -352,16 +351,15 @@ namespace AliyunSDK
                 }
                 else
                 {
-                    _ossClient.DeleteObject(_bucketName,obj.Key);
+                    _ossClient.DeleteObject(_bucketName, obj.Key);
                 }
             }
 
-            while (_filesFroDelStack.Count>0)
+            while (_filesFroDelStack.Count > 0)
             {
-                var delKey = _filesFroDelStack.Pop();
+                string delKey = _filesFroDelStack.Pop();
                 _ossClient.DeleteObject(_bucketName, delKey);
             }
-
         }
     }
 }

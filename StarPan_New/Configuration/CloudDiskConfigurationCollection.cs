@@ -67,6 +67,13 @@ namespace StarPan.Configuration
             set { base["root"] = value; }
         }
 
+        [ConfigurationProperty("extensionfilter")]
+        public string ExtentionFilter
+        {
+            get { return (string)base["extensionfilter"]; }
+            set { base["extensionfilter"] = value; }
+        }
+
         #region OSS
 
         [ConfigurationProperty("accessKey")]

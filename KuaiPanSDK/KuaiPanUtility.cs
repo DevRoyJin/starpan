@@ -61,6 +61,8 @@ namespace KuaiPanSDK
             get { return _root; }
         }
 
+        public bool SupportPartialDownload { get { return false; } }
+
 
         public long GetQuota()
         {
@@ -152,6 +154,11 @@ namespace KuaiPanSDK
                 fileData = null;
                 return false;
             }
+        }
+
+        public bool DownloadPartialFile(string path, int offset, int length, out byte[] fileData)
+        {
+            throw new NotImplementedException();
         }
 
         public bool CreateDirectory(string path)

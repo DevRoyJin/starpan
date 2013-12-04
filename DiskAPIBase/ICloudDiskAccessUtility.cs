@@ -17,6 +17,8 @@ namespace DiskAPIBase
         /// </summary>
         string Root { get;  }
 
+        bool SupportPartialDownload { get; }
+
         /// <summary>
         /// 获取网盘配额
         /// </summary>
@@ -50,6 +52,16 @@ namespace DiskAPIBase
         /// <param name="fileData">下载文件数据流</param>
         /// <returns>true为成功，false为失败</returns>
         bool DownloadFile(string path, out byte[] fileData);
+
+        /// <summary>
+        /// 下载文件
+        /// </summary>
+        /// <param name="path">网盘下载路径</param>
+        /// <param name="length">请求文件长度</param>
+        /// <param name="fileData">下载文件数据流</param>
+        /// <param name="offset">请求文件数据开始位置</param>
+        /// <returns>true为成功，false为失败</returns>
+        bool DownloadPartialFile(string path, int offset, int length, out byte[] fileData);
 
         /// <summary>
         /// 创建文件夹

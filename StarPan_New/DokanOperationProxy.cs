@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using DiskAPIBase;
 using DiskAPIBase.File;
 using Dokan;
@@ -137,33 +138,44 @@ namespace StarPan
             };
             FileTreeNode<PathInfo> fileTreeNode = parentNode.AddChild(node);
             RegisterTreeNdoe(fileTreeNode);
-
-            try
+            new Task(() =>
             {
-                //执行网盘操作
-                if (node.IsDir)//文件夹
+                try
                 {
-                    foreach (var utility in CloudDiskManager.Instance.GetAllCloudDisk())
+                    //执行网盘操作
+                    if (node.IsDir) //文件夹
                     {
-                        Console.WriteLine("DokanOpProxy -->> Create new folder {0} to disk:{1}", fileTreeNode.Path, utility.Name);
-                        utility.CreateDirectory(fileTreeNode.Path);
+                        foreach (var utility in CloudDiskManager.Instance.GetAllCloudDisk())
+                        {
+                            Console.WriteLine("DokanOpProxy -->> Create new folder {0} to disk:{1}", fileTreeNode.Path,
+                                utility.Name);
+                            utility.CreateDirectory(fileTreeNode.Path);
+                        }
+                    }
+                    else //文件
+                    {
+                        //根据文件后缀名选择网盘上传
+                        string extension = fileTreeNode.FileInfo.FileName.GetFileExtension();
+                        var utility = CloudDiskManager.Instance.GetCloudDiskByExtensionFileter(extension);
+
+                        //若找不到，获取剩余空间最大网盘
+                        utility = utility ??
+                                  CloudDiskManager.Instance.GetCloudDisk(
+                                      list => list.OrderBy(disk => disk.GetFreeSpace()).Last());
+                        Console.WriteLine("DokanOpProxy -->> Upoload new file {0} to disk:{1}", fileTreeNode.Path,
+                            utility.Name);
+                        utility.UploadFile(fileTreeNode.Path, Encoding.Default.GetBytes(""));
+                        fileTreeNode.FileInfo.Source = utility.Name;
+
                     }
                 }
-                else //文件
+                catch (Exception ex)
                 {
-                    //获取剩余空间最大网盘
-                    var utility = CloudDiskManager.Instance.GetCloudDisk(list => list.OrderBy(disk => disk.GetFreeSpace()).Last());
-                    Console.WriteLine("DokanOpProxy -->> Upoload new file {0} to disk:{1}", fileTreeNode.Path, utility.Name);
-                    utility.UploadFile(fileTreeNode.Path, Encoding.Default.GetBytes(""));
+                    Console.WriteLine(ex.ToString());
+                    Console.WriteLine(ex.StackTrace);
 
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                Console.WriteLine(ex.StackTrace);
-
-            }
+            }).Start();
            
 
         }
@@ -176,37 +188,39 @@ namespace StarPan
 
             UnRegisterTreeNode(node);
             node.RemoveSelf();
-
-            try
+            new Task(() =>
             {
-                //执行网盘操作
-                if (string.IsNullOrEmpty(node.FileInfo.Source))//文件夹
+                try
                 {
-                    foreach (var utility in CloudDiskManager.Instance.GetAllCloudDisk())
+                    //执行网盘操作
+                    if (string.IsNullOrEmpty(node.FileInfo.Source)) //文件夹
                     {
-                        if (utility.GetFileInfo(path) != null)
+                        foreach (var utility in CloudDiskManager.Instance.GetAllCloudDisk())
                         {
-                            utility.DeleteDirectory(path);
+                            if (utility.GetFileInfo(path) != null)
+                            {
+                                utility.DeleteDirectory(path);
+                            }
                         }
                     }
+                    else //文件
+                    {
+                        var utility = CloudDiskManager.Instance.GetCloudDisk(node.FileInfo.Source);
+                        Console.WriteLine("DokanOpProxy -->> Delete file {0} in disk:{1}", path, utility.Name);
+                        utility.DeleteFile(path);
+
+                    }
                 }
-                else //文件
+                catch (Exception ex)
                 {
-                    var utility = CloudDiskManager.Instance.GetCloudDisk(node.FileInfo.Source);
-                    Console.WriteLine("DokanOpProxy -->> Delete file {0} in disk:{1}", path, utility.Name);
-                    utility.DeleteFile(path);
+                    Console.WriteLine(ex.ToString());
+                    Console.WriteLine(ex.StackTrace);
 
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                Console.WriteLine(ex.StackTrace);
+            }).Start();
 
-            }
 
-            
-            
+
         }
 
         public void MoveNode(string curPath, string destPath)
@@ -242,45 +256,47 @@ namespace StarPan
             }
             RegisterTreeNdoe(node);
 
-
-            try
+            new Task(() =>
             {
-                //执行网盘操作
-                if (string.IsNullOrEmpty(node.FileInfo.Source))//文件夹
+                try
                 {
-                    foreach (var utility in CloudDiskManager.Instance.GetAllCloudDisk())
+                    //执行网盘操作
+                    if (string.IsNullOrEmpty(node.FileInfo.Source)) //文件夹
                     {
-                        if (utility.GetFileInfo(curPath) != null)
+                        foreach (var utility in CloudDiskManager.Instance.GetAllCloudDisk())
                         {
-                            Console.WriteLine("DokanOpProxy -->> Move folder {0} to {1}  in disk:{2}", curPath, destPath, utility.Name);
-                            if (utility.Name == "aliyun")
+                            if (utility.GetFileInfo(curPath) != null)
                             {
-                                utility.Move(curPath + "/", destPath + "/"); //阿里云对文件夹操作需要在最后加上"/"
+                                Console.WriteLine("DokanOpProxy -->> Move folder {0} to {1}  in disk:{2}", curPath,
+                                    destPath, utility.Name);
+                                if (utility.Name == "aliyun")
+                                {
+                                    utility.Move(curPath + "/", destPath + "/"); //阿里云对文件夹操作需要在最后加上"/"
+                                }
+                                else
+                                {
+                                    utility.Move(curPath, destPath);
+                                }
+
                             }
-                            else
-                            {
-                                utility.Move(curPath, destPath);
-                            }
-                            
                         }
                     }
+                    else //文件
+                    {
+                        var utility = CloudDiskManager.Instance.GetCloudDisk(node.FileInfo.Source);
+                        Console.WriteLine("DokanOpProxy -->> Move file {0} to {1}  in disk:{2}", curPath, destPath,
+                            utility.Name);
+                        utility.Move(curPath, destPath);
+
+                    }
                 }
-                else //文件
+                catch (Exception ex)
                 {
-                    var utility = CloudDiskManager.Instance.GetCloudDisk(node.FileInfo.Source);
-                    Console.WriteLine("DokanOpProxy -->> Move file {0} to {1}  in disk:{2}", curPath, destPath, utility.Name);
-                    utility.Move(curPath, destPath);
+                    Console.WriteLine(ex.ToString());
+                    Console.WriteLine(ex.StackTrace);
 
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                Console.WriteLine(ex.StackTrace);
-
-            }
-           
-
+            }).Start();
         }
 
         public void CopyNode(string curPath, string destPath)
@@ -342,14 +358,7 @@ namespace StarPan
             foreach (PathInfo fileInfo in fileInfoList)
             {
                 FileTreeNode<PathInfo> node;
-                if (root.GetChildrenData().All(d => d.FileName != fileInfo.FileName))
-                {
-                    node = root.AddChild(fileInfo);
-                }
-                else
-                {
-                    node = root.GetChild(f => f.FileName == fileInfo.FileName);
-                }
+                node = root.GetChildrenData().All(d => d.FileName != fileInfo.FileName) ? root.AddChild(fileInfo) : root.GetChild(f => f.FileName == fileInfo.FileName);
                 if (fileInfo.IsDir)
                 {
                     GenerateNode(node, utility);

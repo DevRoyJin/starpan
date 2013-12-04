@@ -67,6 +67,11 @@ namespace BaiduCloudSDK
             get { return _root; }
         }
 
+        public bool SupportPartialDownload
+        {
+            get { return true; }
+        }
+
 
         public long GetQuota()
         {
@@ -184,7 +189,42 @@ namespace BaiduCloudSDK
             try
             {
                 pcsPath = PathHelper.CombineWebPath(_root, pcsPath);
-                filebuffer = DownloadFieInternal(pcsPath);
+                filebuffer = DownloadFieInternal(pcsPath, null, null);
+                return true;
+            }
+            catch (WebException we)
+            {
+                string msg = "";
+                var res = we.Response as HttpWebResponse;
+                if (res != null)
+                {
+                    string sRes = HttpWebResponseUtility.ConvertReponseToString(res);
+                    var jsRes = (JObject) JsonConvert.DeserializeObject(sRes);
+                    if (jsRes != null && jsRes["error_msg"] != null)
+                    {
+                        msg = "Download failed:" + jsRes["error_msg"];
+                    }
+                }
+                if (string.IsNullOrEmpty(msg))
+                {
+                    msg = we.Message;
+                }
+                Console.WriteLine(msg);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Download file {0} failed:" + ex, pcsPath);
+            }
+            filebuffer = null;
+            return false;
+        }
+
+        public bool DownloadPartialFile(string pcsPath, int offset, int length, out byte[] filebuffer)
+        {
+            try
+            {
+                pcsPath = PathHelper.CombineWebPath(_root, pcsPath);
+                filebuffer = DownloadFieInternal(pcsPath, offset, length);
                 return true;
             }
             catch (WebException we)
@@ -441,8 +481,6 @@ namespace BaiduCloudSDK
                 Console.WriteLine("Baidu :Move file from {0} to {1} ", oldPath, newPath);
 
                 return true;
-                
-
             }
             catch (WebException we)
             {
@@ -469,7 +507,6 @@ namespace BaiduCloudSDK
             }
             return false;
         }
-
 
         #endregion
 
@@ -500,13 +537,17 @@ namespace BaiduCloudSDK
             return HttpWebResponseUtility.ConvertReponseToString(response);
         }
 
-        private byte[] DownloadFieInternal(string pcsPath)
+        private byte[] DownloadFieInternal(string pcsPath, int? offset, int? length)
         {
             string url = "https://d.pcs.baidu.com/rest/2.0/pcs/file?method={0}&access_token={1}&path={2}";
             url = string.Format(url, BaiduCloudCommand.DownloadCommand, _accessToken, Uri.EscapeDataString(pcsPath));
-            HttpWebResponse response = HttpWebResponseUtility.CreateGetHttpResponse(url,
+            HttpWebRequest request = HttpWebResponseUtility.CreateGetHttpRequest(url,
                 HttpWebResponseUtility.DefaultRequestTimeout, "", null);
-
+            if (offset.HasValue && length.HasValue)
+            {
+                request.AddRange(offset.Value, offset.Value + length.Value);
+            }
+            var response = request.GetResponse() as HttpWebResponse;
             byte[] ret = null;
             using (Stream stream = response.GetResponseStream())
             {
@@ -585,11 +626,10 @@ namespace BaiduCloudSDK
         private DateTime GetRightTime(long tmpTime)
         {
             DateTime dtStart = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
-            long ITime = tmpTime * 10000000;
+            long ITime = tmpTime*10000000;
             var toNow = new TimeSpan(ITime);
             return dtStart.Add(toNow);
         }
-
 
         #endregion
     }

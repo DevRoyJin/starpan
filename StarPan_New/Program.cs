@@ -12,24 +12,17 @@ namespace StarPan
     {
         static void Main(string[] args)
         {
-            //string root = "/apps";
-            //string path = "111/22/3.txt";
-            //path = PathHelper.CombineWebPath(root, path);
-            Console.WriteLine(~(1<<31));
             var instantce = CloudDiskManager.Instance;
             instantce.PrintFreeSpace();
 
             var proxy = new DokanOperationProxy();
             proxy.PrintFileCount();
             proxy.PrintNode(proxy.Root);
-
-            Console.ReadLine();
-
             DokanOptions opt = new DokanOptions();
-            opt.MountPoint = "r:\\";
+            opt.MountPoint = UtilityMethods.GetFirstAvailableDriveLetter() + ":\\";//"r:\\";
             opt.DebugMode = true;
             opt.UseStdErr = true;
-            opt.VolumeLabel = "SjtuPan";
+            opt.VolumeLabel = "NetDisk";
             opt.RemovableDrive = true;
             //int status = DokanNet.DokanMain(opt, new StarPanOperations());
             int status = DokanNet.DokanMain(opt, new DokanCloudDiskOperation());

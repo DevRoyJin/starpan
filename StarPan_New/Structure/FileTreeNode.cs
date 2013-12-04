@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using DiskAPIBase;
 
 namespace StarPan.Structure
@@ -31,36 +32,30 @@ namespace StarPan.Structure
         #region Properties
 
         /// <summary>
-        /// 文件信息
+        ///     文件信息
         /// </summary>
         public T FileInfo { get; private set; }
 
         /// <summary>
-        /// 标志文件数据已被缓存
+        ///     标志文件数据已被缓存
         /// </summary>
         public bool IsFileDateCached
         {
-            get
-            {
-                return _fileDataStream != null;
-            }
+            get { return _fileDataStream != null; }
         }
 
         /// <summary>
-        /// 标志文件数据发生改变
+        ///     标志文件数据发生改变
         /// </summary>
-        public bool IsDataModified
-        {
-            get; private set;
-        }
+        public bool IsDataModified { get; private set; }
 
         /// <summary>
-        /// 父节点，若本身为根节点，则为空
+        ///     父节点，若本身为根节点，则为空
         /// </summary>
         public FileTreeNode<T> Parent { get; private set; }
 
         /// <summary>
-        /// 所在目录路径
+        ///     所在目录路径
         /// </summary>
         public string ParentPath
         {
@@ -95,7 +90,7 @@ namespace StarPan.Structure
         }
 
         /// <summary>
-        /// 路径
+        ///     路径
         /// </summary>
         public string Path
         {
@@ -103,7 +98,7 @@ namespace StarPan.Structure
         }
 
         /// <summary>
-        /// 所在层
+        ///     所在层
         /// </summary>
         public int Layer
         {
@@ -121,7 +116,7 @@ namespace StarPan.Structure
         }
 
         /// <summary>
-        /// 所占空间大小
+        ///     所占空间大小
         /// </summary>
         public long Size
         {
@@ -151,12 +146,13 @@ namespace StarPan.Structure
         }
 
         /// <summary>
-        /// 是否包含子节点
+        ///     是否包含子节点
         /// </summary>
         public bool HasChild
         {
             get { return _children.Any(); }
         }
+
         #endregion
 
         #region Public Methods
@@ -231,7 +227,7 @@ namespace StarPan.Structure
         }
 
         /// <summary>
-        /// 请求文件数据
+        ///     请求文件数据
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="buffer"></param>
@@ -247,14 +243,34 @@ namespace StarPan.Structure
                 if (_fileDataStream == null)
                 {
                     //从网盘读取数据
-                    var utility = CloudDiskManager.Instance.GetCloudDisk(FileInfo.Source);
+                    ICloudDiskAccessUtility utility = CloudDiskManager.Instance.GetCloudDisk(FileInfo.Source);
                     if (utility != null)
                     {
                         byte[] fileData;
-
-                        if (utility.DownloadFile(Path, out fileData))
+                        
+                        if (Size < 2*1024*1024 || !utility.SupportPartialDownload)
                         {
-                            _fileDataStream = new MemoryStream(fileData, false);
+                            if (utility.DownloadFile(Path, out fileData))
+                            {
+                                _fileDataStream = new MemoryStream(fileData, false);
+                            }
+                        }
+                        else
+                        {
+                            if (utility.DownloadPartialFile(Path, (int) offset, buffer.Length, out fileData))
+                            {
+                                Console.WriteLine("Request file data-->>file:{0} buffer:{1} offset:{2}", FileInfo.FileName,
+                       buffer.Length, offset);
+                                using (var ms = new MemoryStream(fileData, false))
+                                {
+                                    int iResult = ms.Read(buffer, 0, buffer.Length);
+                                    Console.WriteLine("Read bytes:{0}", iResult);
+                                    FileInfo.RecordReadTime();
+                                    return (uint)iResult;
+                                }
+
+
+                            }
                         }
                     }
                 }
@@ -270,15 +286,15 @@ namespace StarPan.Structure
                     }
                     int iResult = _fileDataStream.Read(buffer, 0, buffer.Length);
                     Console.WriteLine("Read bytes:{0}", iResult);
+                    FileInfo.RecordReadTime();
                     return (uint) iResult;
                 }
             }
             return 0;
-
         }
 
         /// <summary>
-        /// 写入文件数据
+        ///     写入文件数据
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="buffer"></param>
@@ -291,7 +307,12 @@ namespace StarPan.Structure
             }
             lock (_locker)
             {
-                _fileDataStream = new MemoryStream();
+                //标志文件数据发生改变 同时清空文件数据缓存
+                if (!IsDataModified)
+                {
+                    _fileDataStream = new MemoryStream();
+                    IsDataModified = true;
+                }
 
                 Console.WriteLine("Write file data-->>file:{0} buffer:{1} offset:{2}", FileInfo.FileName,
                     buffer.Length, offset);
@@ -306,21 +327,15 @@ namespace StarPan.Structure
                 Console.WriteLine("Write bytes:{0}", buffer.Length);
                 Console.WriteLine("stream length:{0}  stream position:{1}", _fileDataStream.Length,
                     _fileDataStream.Position);
-                //标志文件数据发生改变
-                if (!IsDataModified)
-                {
-                    IsDataModified = true;
-                }
-
+                
+                FileInfo.RecordWriteTime();
                 return (uint) buffer.Length;
-
             }
             return 0;
-
         }
 
         /// <summary>
-        /// 释放文件数据
+        ///     释放文件数据
         /// </summary>
         public void ReleaseFileData()
         {
@@ -339,7 +354,9 @@ namespace StarPan.Structure
                         {
                             isNew = true;
                             //获取剩余空间最大网盘
-                            utility = CloudDiskManager.Instance.GetCloudDisk(list=>list.OrderBy(disk=>disk.GetFreeSpace()).Last());
+                            utility =
+                                CloudDiskManager.Instance.GetCloudDisk(
+                                    list => list.OrderBy(disk => disk.GetFreeSpace()).Last());
                             FileInfo.Source = utility != null ? utility.Name : "";
                         }
                         else
@@ -349,16 +366,27 @@ namespace StarPan.Structure
 
                         if (utility != null)
                         {
+                            byte[] fileData = _fileDataStream.ToArray();
                             //上传文件
-                            if (!isNew)
+                            new Task(() =>
                             {
-                                if (utility.GetFileInfo(Path) != null)
+                                try
                                 {
-                                    utility.DeleteFile(Path);
-                                }                                
-                            }
-                            utility.UploadFile(Path, _fileDataStream.ToArray());
-
+                                    if (!isNew)
+                                    {
+                                        if (utility.GetFileInfo(Path) != null)
+                                        {
+                                            utility.DeleteFile(Path);
+                                        }
+                                    }
+                                    utility.UploadFile(Path, fileData);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine("Error : {0}",ex.ToString());
+                                }
+                                
+                            }).Start();
                         }
                     }
                     //文件修改标志位复位
@@ -368,8 +396,8 @@ namespace StarPan.Structure
                     _fileDataStream = null;
                 }
             }
-
         }
+
         #endregion
     }
 }

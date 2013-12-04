@@ -12,10 +12,12 @@ namespace StarPan
     {
         private static CloudDiskManager _cloudDiskManager;
         private readonly IDictionary<string, ICloudDiskAccessUtility> _mCloudDisks;
+        private readonly IDictionary<string, string> _mExtentionFilterDictionary;
 
         private CloudDiskManager()
         {
             _mCloudDisks = new Dictionary<string, ICloudDiskAccessUtility>();
+            _mExtentionFilterDictionary = new Dictionary<string, string>();
             //获取网盘操作接口实例 
 
             var section = ConfigurationManager.GetSection("cloudDiskConfiguration") as CloudDisksConfigurationSection;
@@ -35,6 +37,16 @@ namespace StarPan
                 string dll = diskConfig.DllName;
                 string cn = diskConfig.ClassName;
                 object[] args = null;
+                string strExtentions = diskConfig.ExtentionFilter;
+                string[] extensions = strExtentions.Split('|');
+                foreach (var extension in extensions)
+                {
+                    var lExtention = extension.ToLower();
+                    if (!_mExtentionFilterDictionary.ContainsKey(lExtention))
+                    {
+                        _mExtentionFilterDictionary.Add(lExtention,diskConfig.Name);
+                    }
+                }
 
                 if (!string.IsNullOrEmpty(diskConfig.ConsumerKey) &&
                     !string.IsNullOrEmpty(diskConfig.ConsumerSecret) &&
@@ -83,14 +95,7 @@ namespace StarPan
 
         public static CloudDiskManager Instance
         {
-            get
-            {
-                if (_cloudDiskManager == null)
-                {
-                    _cloudDiskManager = new CloudDiskManager();
-                }
-                return _cloudDiskManager;
-            }
+            get { return _cloudDiskManager ?? (_cloudDiskManager = new CloudDiskManager()); }
         }
 
         /// <summary>
@@ -112,6 +117,16 @@ namespace StarPan
             Func<IEnumerable<ICloudDiskAccessUtility>, ICloudDiskAccessUtility> diskSelectingStrategy)
         {
             return diskSelectingStrategy(_mCloudDisks.Values);
+        }
+
+        public ICloudDiskAccessUtility GetCloudDiskByExtensionFileter(string extention)
+        {
+            var lExtention = extention.ToLower();
+            if (_mExtentionFilterDictionary.ContainsKey(lExtention))
+            {
+                return _mCloudDisks[_mExtentionFilterDictionary[lExtention]];
+            }
+            return null;
         }
 
         public IList<ICloudDiskAccessUtility> GetAllCloudDisk()

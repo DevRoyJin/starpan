@@ -17,9 +17,34 @@ namespace DiskAPIBase
     {
         public const int DefaultRequestTimeout = 60000;
 
+        public static HttpWebRequest CreateGetHttpRequest(string url, int? timeout, string userAgent, CookieCollection cookies)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                throw new ArgumentNullException("url");
+            }
+            HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
+            request.Method = "GET";
+            request.UserAgent = DefaultUserAgent;
+            if (!string.IsNullOrEmpty(userAgent))
+            {
+                request.UserAgent = userAgent;
+            }
+            if (timeout.HasValue)
+            {
+                request.Timeout = timeout.Value;
+            }
+            if (cookies != null)
+            {
+                request.CookieContainer = new CookieContainer();
+                request.CookieContainer.Add(cookies);
+            }
+            return request;
+        }
+
         private static readonly string DefaultUserAgent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)";
         /// <summary>
-        /// 创建GET方式的HTTP请求
+        /// 创建GET方式的HTTP请求并获取response
         /// </summary>
         /// <param name="url">请求的URL</param>
         /// <param name="timeout">请求的超时时间</param>
