@@ -253,7 +253,15 @@ namespace StarPan
                         if (utility.GetFileInfo(curPath) != null)
                         {
                             Console.WriteLine("DokanOpProxy -->> Move folder {0} to {1}  in disk:{2}", curPath, destPath, utility.Name);
-                            utility.Move(curPath, destPath);
+                            if (utility.Name == "aliyun")
+                            {
+                                utility.Move(curPath + "/", destPath + "/"); //阿里云对文件夹操作需要在最后加上"/"
+                            }
+                            else
+                            {
+                                utility.Move(curPath, destPath);
+                            }
+                            
                         }
                     }
                 }
