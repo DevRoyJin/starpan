@@ -432,9 +432,10 @@ namespace BaiduCloudSDK
             {
                 oldPath = PathHelper.CombineWebPath(_root, oldPath);
                 newPath = PathHelper.CombineWebPath(_root, newPath);
-                var newFolder = PathHelper.GetParentDirectory(newPath);
+                //修复重命名文件夹失败问题，注掉以下2行代码
+                //var newFolder = PathHelper.GetParentDirectory(newPath);
 
-                CreateDirectoryInternal(newFolder);              
+                //CreateDirectoryInternal(newFolder);              
                 string ret = MoveInternal(oldPath, newPath);
                 Console.WriteLine("Baidu: Got resposne-->>" + ret);
                 Console.WriteLine("Baidu :Move file from {0} to {1} ", oldPath, newPath);
