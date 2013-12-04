@@ -233,6 +233,7 @@ namespace StarPan
         {
             Console.WriteLine("Dokan ReadFile --> filename:{0}", filename);
             // get parentfolder
+            Dokan.DokanNet.DokanResetTimeout(1000 * 30, info);
             string parentFolder = PathHelper.ConvertToWebPath(filename.GetPathPart());
             if (string.IsNullOrEmpty(parentFolder))
             {
