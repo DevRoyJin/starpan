@@ -274,12 +274,15 @@ namespace AliyunSDK
             try
             {
                 path = PathHelper.CombineWebPath(_root, path);
+                Console.WriteLine("Aliyun: GetFileInfo {0}", path);
                 var listObjReq = new ListObjectsRequest(_bucketName);
                 listObjReq.Prefix = path;
                 listObjReq.MaxKeys = 1;
 
                 var oList = _ossClient.ListObjects(listObjReq);
-                var objSummary = oList.ObjectSummaries.FirstOrDefault(oos => oos.Key == path);
+                //var objSummary = oList.ObjectSummaries.FirstOrDefault(oos => oos.Key == path);
+                //若请求的是文件夹，则需要在路径最后加上“/”
+                var objSummary = oList.ObjectSummaries.FirstOrDefault(oos => oos.Key == path || oos.Key==path+"/");
                 if (objSummary != null)
                 {
                     return new CloudFileInfo()
@@ -309,6 +312,7 @@ namespace AliyunSDK
             {
                 path = PathHelper.CombineWebPath(_root, path);
                 newPath = PathHelper.CombineWebPath(_root, newPath);
+                Console.WriteLine("Aliyun: Move from {0} to {1}", path, newPath);
                 //Copy first
                 var copyReq = new CopyObjectRequest(_bucketName, path, _bucketName, newPath);
                 var copyResult = _ossClient.CopyObject(copyReq);
