@@ -354,9 +354,14 @@ namespace StarPan.Structure
                         {
                             isNew = true;
                             //获取剩余空间最大网盘
-                            utility =
-                                CloudDiskManager.Instance.GetCloudDisk(
-                                    list => list.OrderBy(disk => disk.GetFreeSpace()).Last());
+                            //根据文件后缀名选择网盘上传
+                            string extension = FileInfo.FileName.GetFileExtension();
+                            utility = CloudDiskManager.Instance.GetCloudDiskByExtensionFileter(extension);
+
+                            //若找不到，获取剩余空间最大网盘
+                            utility = utility ??
+                                      CloudDiskManager.Instance.GetCloudDisk(
+                                          list => list.OrderBy(disk => disk.GetFreeSpace()).Last());
                             FileInfo.Source = utility != null ? utility.Name : "";
                         }
                         else
