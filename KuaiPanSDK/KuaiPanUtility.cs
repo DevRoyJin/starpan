@@ -185,6 +185,7 @@ namespace KuaiPanSDK
             dirPath = PathHelper.CombineWebPath(_root, dirPath);
             KuaiPanSDK.Model.MetaData FilesLists = _sdk.GetMetaData(dirPath, null);
             List<DiskAPIBase.File.CloudFileInfo> AllFiles = new List<DiskAPIBase.File.CloudFileInfo>();
+            if (FilesLists==null)return new List<DiskAPIBase.File.CloudFileInfo>();
             foreach (var f in FilesLists.Files)
             {
                 DiskAPIBase.File.CloudFileInfo file = new DiskAPIBase.File.CloudFileInfo();
